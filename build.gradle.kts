@@ -82,6 +82,10 @@ minecraft {
 
 repositories {
     maven {
+        name = "cursemaven"
+        setUrl("https://cursemaven.com")
+    }
+    maven {
         name = "ic2, forestry"
         setUrl("http://maven.ic2.player.to/")
     }
@@ -116,7 +120,7 @@ repositories {
 }
 
 dependencies {
-    "deobfCompile"("net.sengir.forestry:forestry_$mcVersion:$forestryVersion") {
+    "deobfCompile"("curse.maven:forestry-59751:2684780") {
         isTransitive = false
     }
     "deobfCompile"("codechicken:ChickenASM:$shortVersion-$chickenasmVersion")
