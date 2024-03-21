@@ -179,6 +179,9 @@ public class OreRecipeHandler {
 
         ModHandler.addShapelessRecipe(String.format("crushed_ore_to_dust_%s", material),
             impureDustStack, 'h', new UnificationEntry(crushedPrefix, material));
+
+        //do not try to add smelting recipes for materials which require blast furnace
+        processMetalSmelting(crushedPrefix, material);
     }
 
     public static void processCrushedCentrifuged(OrePrefix centrifugedPrefix, DustMaterial material) {
