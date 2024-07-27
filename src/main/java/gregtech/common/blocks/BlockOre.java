@@ -3,7 +3,9 @@ package gregtech.common.blocks;
 import gregtech.api.GregTechAPI;
 import gregtech.api.unification.material.type.DustMaterial;
 import gregtech.api.unification.ore.StoneType;
+import gregtech.api.unification.ore.StoneTypes;
 import gregtech.api.util.IBlockOre;
+import gregtech.api.worldgen.config.OreConfigUtils;
 import gregtech.common.blocks.properties.PropertyStoneType;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockFalling;
@@ -13,6 +15,7 @@ import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.NonNullList;
@@ -65,7 +68,13 @@ public class BlockOre extends BlockFalling implements IBlockOre {
 
     @Override
     public int damageDropped(IBlockState state) {
-        return getMetaFromState(state);
+        StoneType type = state.getValue(STONE_TYPE);
+
+        if(type == StoneTypes.ENDSTONE || type == StoneTypes.NETHERRACK) {
+            return getMetaFromState(state);
+
+        }
+        return 0;
     }
 
     @Override
@@ -118,7 +127,17 @@ public class BlockOre extends BlockFalling implements IBlockOre {
         return new ItemStack(this, 1, getMetaFromState(blockState));
     }
 
+    @Override
+    public Item getItemDropped(IBlockState state, Random rand, int fortune) {
+        StoneType type = state.getValue(STONE_TYPE);
 
+        if(type == StoneTypes.ENDSTONE || type == StoneTypes.NETHERRACK) {
+            return super.getItemDropped(state, rand, fortune);
+
+        }
+        IBlockState ore = OreConfigUtils.getOreForMaterial(this.material).get(StoneTypes.STONE);
+        return Item.getItemFromBlock(ore.getBlock());
+    }
 
     @Override
     public void getSubBlocks(CreativeTabs tab, NonNullList<ItemStack> list) {

@@ -43,7 +43,7 @@ public class FuelRecipes {
         registerGasGeneratorFuel(Materials.Butane.getFluid(4), 37, GTValues.LV);
         registerGasGeneratorFuel(Materials.LPG.getFluid(1), 10, GTValues.LV);
         registerGasGeneratorFuel(Materials.Naphtha.getFluid(1), 10, GTValues.LV);
-        registerGasGeneratorFuel(Materials.Toluene.getFluid(4), 41, GTValues.LV);
+        //registerGasGeneratorFuel(Materials.Toluene.getFluid(4), 41, GTValues.LV);
 
         //semi-fluid fuels, like creosote
         registerSemiFluidGeneratorFuel(Materials.Creosote.getFluid(14), 1, GTValues.LV);
