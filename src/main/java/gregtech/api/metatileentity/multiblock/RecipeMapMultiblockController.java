@@ -144,8 +144,8 @@ public abstract class RecipeMapMultiblockController extends MultiblockWithDispla
             if (recipeMapWorkable.isHasNotEnoughEnergy()) {
                 textList.add(new TextComponentTranslation("gregtech.multiblock.not_enough_energy").setStyle(new Style().setColor(TextFormatting.RED)));
             }
-            textList.add(new TextComponentString("Cache (size) " + recipeMapWorkable.previousRecipe.getCachedRecipeCount() + " hit(" + recipeMapWorkable.previousRecipe.getCacheHit() + ") miss (" + recipeMapWorkable.previousRecipe.getCacheMiss() + ")")
-                    .setStyle(new Style().setColor(TextFormatting.GREEN)));
+            textList.add(new TextComponentString(String.format("Cache size (%s) hit (%s) miss (%s)", this.recipeMapWorkable.previousRecipe.getCachedRecipeCount(), this.recipeMapWorkable.previousRecipe.getCacheHit(), this.recipeMapWorkable.previousRecipe.getCacheMiss()))
+                    .setStyle(new Style().setColor(TextFormatting.WHITE)));
         }
     }
 

@@ -62,7 +62,6 @@ public class RecipeLFUCache
         }
 
         if (foundRecipe == null) {
-            this.cacheMiss++;
             return null;
         }
 
@@ -77,8 +76,17 @@ public class RecipeLFUCache
         }
 
         frequencyCounter.computeIfAbsent(frequency + 1, k -> new LinkedHashSet<>()).add(recipeCacheIndex);
-        this.cacheHit++;
         return foundRecipe;
+    }
+
+    public int cacheUtilized() {
+        this.cacheHit++;
+        return this.cacheHit;
+    }
+
+    public int cacheUnutilized() {
+        this.cacheMiss++;
+        return this.cacheMiss;
     }
 
     public void put(Recipe key) {

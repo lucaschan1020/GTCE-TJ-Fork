@@ -185,7 +185,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable 
         Recipe currentRecipe = null;
         IItemHandlerModifiable importInventory = getInputInventory();
         IMultipleTankHandler importFluids = getInputTank();
-        Recipe foundRecipe = previousRecipe.get(importInventory, importFluids);
+        Recipe foundRecipe = this.previousRecipe.get(importInventory, importFluids);
         if (foundRecipe != null) {
             //if previous recipe still matches inputs, try to use it
             currentRecipe = foundRecipe;
@@ -196,11 +196,15 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable 
                 //else, try searching new recipe for given inputs
                 currentRecipe = findRecipe(maxVoltage, importInventory, importFluids);
                 if (currentRecipe != null) {
-                    previousRecipe.put(currentRecipe);
+                    this.previousRecipe.put(currentRecipe);
+                    this.previousRecipe.cacheUnutilized();
                 }
             }
         }
         if (currentRecipe != null && setupAndConsumeRecipeInputs(currentRecipe)) {
+            if (foundRecipe != null) {
+                this.previousRecipe.cacheUtilized();
+            }
             setupRecipe(currentRecipe);
             return true;
         }
