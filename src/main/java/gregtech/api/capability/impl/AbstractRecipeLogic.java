@@ -9,6 +9,7 @@ import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.recipes.Recipe;
 import gregtech.api.recipes.RecipeMap;
 import gregtech.api.util.GTUtility;
+import gregtech.api.util.RecipeLFUCache;
 import gregtech.common.ConfigHolder;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -38,7 +39,8 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable 
     protected boolean forceRecipeRecheck;
     protected ItemStack[] lastItemInputs;
     protected FluidStack[] lastFluidInputs;
-    protected Recipe previousRecipe;
+    public RecipeLFUCache previousRecipe;
+    public int recipeCacheSize;
     protected boolean allowOverclocking = true;
     private long overclockVoltage = 0;
     private LongSupplier overclockPolicy = this::getMaxVoltage;
@@ -62,7 +64,12 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable 
     private int failCount = 0;
 
     public AbstractRecipeLogic(MetaTileEntity tileEntity, RecipeMap<?> recipeMap) {
+        this(tileEntity, recipeMap, 16);
+    }
+    public AbstractRecipeLogic(MetaTileEntity tileEntity, RecipeMap<?> recipeMap, int recipeCacheSize) {
         super(tileEntity);
+        this.recipeCacheSize = recipeCacheSize;
+        this.previousRecipe = new RecipeLFUCache(this.recipeCacheSize);
         this.recipeMap = recipeMap;
         if(ConfigHolder.gregicalityOverclocking){
             V = GTValues.V2;
@@ -178,9 +185,10 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable 
         Recipe currentRecipe = null;
         IItemHandlerModifiable importInventory = getInputInventory();
         IMultipleTankHandler importFluids = getInputTank();
-        if (previousRecipe != null && previousRecipe.matches(false, importInventory, importFluids)) {
+        Recipe foundRecipe = previousRecipe.get(importInventory, importFluids);
+        if (foundRecipe != null) {
             //if previous recipe still matches inputs, try to use it
-            currentRecipe = previousRecipe;
+            currentRecipe = foundRecipe;
         } else {
             boolean dirty = checkRecipeInputsDirty(importInventory, importFluids);
             if (dirty || forceRecipeRecheck) {
@@ -188,7 +196,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable 
                 //else, try searching new recipe for given inputs
                 currentRecipe = findRecipe(maxVoltage, importInventory, importFluids);
                 if (currentRecipe != null) {
-                    this.previousRecipe = currentRecipe;
+                    previousRecipe.put(currentRecipe);
                 }
             }
         }

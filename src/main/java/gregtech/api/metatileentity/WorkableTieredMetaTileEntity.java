@@ -31,15 +31,23 @@ public abstract class WorkableTieredMetaTileEntity extends TieredMetaTileEntity 
     protected final OrientedOverlayRenderer renderer;
 
     public WorkableTieredMetaTileEntity(ResourceLocation metaTileEntityId, RecipeMap<?> recipeMap, OrientedOverlayRenderer renderer, int tier) {
+        this(metaTileEntityId, recipeMap, renderer, tier, 16);
+    }
+
+    public WorkableTieredMetaTileEntity(ResourceLocation metaTileEntityId, RecipeMap<?> recipeMap, OrientedOverlayRenderer renderer, int tier, int recipeCacheSize) {
         super(metaTileEntityId, tier);
         this.renderer = renderer;
-        this.workable = createWorkable(recipeMap);
+        this.workable = createWorkable(recipeMap, recipeCacheSize);
         initializeInventory();
         reinitializeEnergyContainer();
     }
 
     protected RecipeLogicEnergy createWorkable(RecipeMap<?> recipeMap) {
-        return new RecipeLogicEnergy(this, recipeMap, () -> energyContainer);
+        return createWorkable(recipeMap, 16);
+    }
+
+    protected RecipeLogicEnergy createWorkable(RecipeMap<?> recipeMap, int recipeCacheSize) {
+        return new RecipeLogicEnergy(this, recipeMap, () -> energyContainer, recipeCacheSize);
     }
 
     @Override

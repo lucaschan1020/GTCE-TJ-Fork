@@ -31,7 +31,11 @@ public class RecipeLogicSteam extends AbstractRecipeLogic {
     private EnumFacing ventingSide;
 
     public RecipeLogicSteam(MetaTileEntity tileEntity, RecipeMap<?> recipeMap, boolean isHighPressure, IFluidTank steamFluidTank, double conversionRate) {
-        super(tileEntity, recipeMap);
+        this(tileEntity, recipeMap, isHighPressure, steamFluidTank, conversionRate, 16);
+    }
+
+    public RecipeLogicSteam(MetaTileEntity tileEntity, RecipeMap<?> recipeMap, boolean isHighPressure, IFluidTank steamFluidTank, double conversionRate, int recipeCacheSize) {
+        super(tileEntity, recipeMap, recipeCacheSize);
         this.steamFluidTank = steamFluidTank;
         this.conversionRate = conversionRate;
         this.isHighPressure = isHighPressure;

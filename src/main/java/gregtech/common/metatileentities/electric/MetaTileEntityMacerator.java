@@ -25,7 +25,7 @@ public class MetaTileEntityMacerator extends SimpleMachineMetaTileEntity {
 
     @Override
     protected RecipeLogicEnergy createWorkable(RecipeMap<?> recipeMap) {
-        final RecipeLogicEnergy result = new RecipeLogicEnergy(this, recipeMap, () -> energyContainer) {
+        final RecipeLogicEnergy result = new RecipeLogicEnergy(this, recipeMap, () -> energyContainer, 64) {
             @Override
             protected int getMachineTierForRecipe(Recipe recipe) {
                 int tier = GTUtility.getTierByVoltage(getMaxVoltage());
