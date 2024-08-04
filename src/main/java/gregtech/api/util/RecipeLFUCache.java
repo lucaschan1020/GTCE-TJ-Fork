@@ -10,6 +10,7 @@ public class RecipeLFUCache
 {
     private final int capacity;
     private int cachedRecipeCount = 0;
+    private int foundRecipeIndex = 0;
 
     // Store actual key-value pairs
     private final Recipe[] recipeCaches;
@@ -44,8 +45,6 @@ public class RecipeLFUCache
 
     public Recipe get(IItemHandlerModifiable inputItems, IMultipleTankHandler inputFluids) {
         NavigableMap<Integer, LinkedHashSet<Integer>> descendingFrequencyMap = frequencyCounter.descendingMap();
-        Recipe foundRecipe = null;
-        int recipeCacheIndex = 0;
         for(LinkedHashSet<Integer> cacheIndexes: descendingFrequencyMap.values()) {
             for (Integer cacheIndex: cacheIndexes) {
                 Recipe recipeCache = recipeCaches[cacheIndex];
@@ -54,32 +53,27 @@ public class RecipeLFUCache
                 }
                 boolean foundMatches = recipeCache.matches(false, inputItems, inputFluids);
                 if (foundMatches) {
-                    foundRecipe = recipeCache;
-                    recipeCacheIndex = cacheIndex;
-                    break;
+                    foundRecipeIndex = cacheIndex;
+                    return recipeCache;
                 }
             }
         }
+        return null;
+    }
 
-        if (foundRecipe == null) {
-            return null;
-        }
-
+    public int cacheUtilized() {
         // Update frequency
-        int frequency = frequencyMap.get(recipeCacheIndex);
-        frequencyMap.put(recipeCacheIndex, frequency + 1);
+        int frequency = frequencyMap.get(foundRecipeIndex);
+        frequencyMap.put(foundRecipeIndex, frequency + 1);
 
         // Update frequencyCounter
-        frequencyCounter.get(frequency).remove(recipeCacheIndex);
+        frequencyCounter.get(frequency).remove(foundRecipeIndex);
         if (frequencyCounter.get(frequency).isEmpty()) {
             frequencyCounter.remove(frequency);
         }
 
-        frequencyCounter.computeIfAbsent(frequency + 1, k -> new LinkedHashSet<>()).add(recipeCacheIndex);
-        return foundRecipe;
-    }
+        frequencyCounter.computeIfAbsent(frequency + 1, k -> new LinkedHashSet<>()).add(foundRecipeIndex);
 
-    public int cacheUtilized() {
         this.cacheHit++;
         return this.cacheHit;
     }
@@ -89,7 +83,7 @@ public class RecipeLFUCache
         return this.cacheMiss;
     }
 
-    public void put(Recipe key) {
+    public void put(Recipe value) {
         if (capacity <= 0) {
             // Capacity is zero or negative, no caching
             return;
@@ -112,7 +106,7 @@ public class RecipeLFUCache
         }
         GTLog.logger.debug("Writing cache at index {}", replaceRecipeCacheIndex);
         // Add the new key-value pair to cache
-        recipeCaches[replaceRecipeCacheIndex] = key;
+        recipeCaches[replaceRecipeCacheIndex] = value;
 
         // Update frequency maps
         frequencyMap.put(replaceRecipeCacheIndex, 1);

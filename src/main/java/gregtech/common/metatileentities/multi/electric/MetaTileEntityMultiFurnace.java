@@ -23,7 +23,7 @@ import java.util.*;
 public class MetaTileEntityMultiFurnace extends RecipeMapMultiblockController {
 
     private static final MultiblockAbility<?>[] ALLOWED_ABILITIES = {
-        MultiblockAbility.IMPORT_ITEMS, MultiblockAbility.EXPORT_ITEMS, MultiblockAbility.INPUT_ENERGY
+            MultiblockAbility.IMPORT_ITEMS, MultiblockAbility.EXPORT_ITEMS, MultiblockAbility.INPUT_ENERGY
     };
 
     protected int heatingCoilLevel;
@@ -66,16 +66,16 @@ public class MetaTileEntityMultiFurnace extends RecipeMapMultiblockController {
     @Override
     protected BlockPattern createStructurePattern() {
         return FactoryBlockPattern.start()
-            .aisle("XXX", "CCC", "XXX")
-            .aisle("XXX", "C#C", "XXX")
-            .aisle("XSX", "CCC", "XXX")
-            .setAmountAtLeast('L', 9)
-            .where('S', selfPredicate())
-            .where('L', statePredicate(getCasingState()))
-            .where('X', statePredicate(getCasingState()).or(abilityPartPredicate(ALLOWED_ABILITIES)))
-            .where('C', MetaTileEntityElectricBlastFurnace.heatingCoilPredicate())
-            .where('#', isAirPredicate())
-            .build();
+                .aisle("XXX", "CCC", "XXX")
+                .aisle("XXX", "C#C", "XXX")
+                .aisle("XSX", "CCC", "XXX")
+                .setAmountAtLeast('L', 9)
+                .where('S', selfPredicate())
+                .where('L', statePredicate(getCasingState()))
+                .where('X', statePredicate(getCasingState()).or(abilityPartPredicate(ALLOWED_ABILITIES)))
+                .where('C', MetaTileEntityElectricBlastFurnace.heatingCoilPredicate())
+                .where('#', isAirPredicate())
+                .build();
     }
 
     public IBlockState getCasingState() {
@@ -99,43 +99,44 @@ public class MetaTileEntityMultiFurnace extends RecipeMapMultiblockController {
             super(tileEntity);
         }
 
-//        @Override
-//        protected boolean trySearchNewRecipe() {
-//            long maxVoltage = getMaxVoltage();
-//            Recipe currentRecipe = null;
-//            IItemHandlerModifiable importInventory = getInputInventory();
-//            IMultipleTankHandler importFluids = getInputTank();
-//            boolean dirty = checkRecipeInputsDirty(importInventory, importFluids);
-//            //inverse of logic in normal AbstractRecipeLogic
-//            //for MultiSmelter, we can reuse previous recipe if inputs didn't change
-//            //otherwise, we need to recompute it for new ingredients
-//            //but technically, it means we can cache multi smelter recipe, but changing inputs have more priority
-//            if(dirty || forceRecipeRecheck) {
-//                this.forceRecipeRecheck = false;
-//                //else, try searching new recipe for given inputs
-//                currentRecipe = findRecipe(maxVoltage, importInventory, importFluids);
+        //        @Override
+        protected boolean trySearchNewRecipe() {
+            long maxVoltage = getMaxVoltage();
+            Recipe currentRecipe = null;
+            IItemHandlerModifiable importInventory = getInputInventory();
+            IMultipleTankHandler importFluids = getInputTank();
+//            Recipe foundRecipe = this.previousRecipe.get(importInventory, importFluids);
+//            if (foundRecipe != null) {
+//                currentRecipe = foundRecipe;
+//            } else {
+            boolean dirty = checkRecipeInputsDirty(importInventory, importFluids);
+            if (dirty || forceRecipeRecheck) {
+                this.forceRecipeRecheck = false;
+                currentRecipe = findRecipe(maxVoltage, importInventory, importFluids);
 //                if (currentRecipe != null) {
 //                    this.previousRecipe.put(currentRecipe);
+//                    this.previousRecipe.cacheUnutilized();
 //                }
-//            } else {
-//                Recipe foundRecipe = this.previousRecipe.get(importInventory, importFluids);
-//                //if previous recipe still matches inputs, try to use it
-//                if (foundRecipe != null) {
-//                    currentRecipe = foundRecipe;
-//                }
+            }
+
+            if (currentRecipe == null) {
+                return false;
+            }
+
+            if (!setupAndConsumeRecipeInputs(currentRecipe)) {
+                return false;
+            }
+//            if (foundRecipe != null) {
+//                this.previousRecipe.cacheUtilized();
 //            }
-//            if (currentRecipe != null && setupAndConsumeRecipeInputs(currentRecipe)) {
-//                setupRecipe(currentRecipe);
-//                return true;
-//            }
-//            return false;
-//        }
+            setupRecipe(currentRecipe);
+            return true;
+        }
 
         @Override
         protected Recipe findRecipe(long maxVoltage,
                                     IItemHandlerModifiable inputs,
-                                    IMultipleTankHandler fluidInputs)
-        {
+                                    IMultipleTankHandler fluidInputs) {
             int currentItemsEngaged = 0;
             final int maxItemsLimit = 32 * heatingCoilLevel;
             final ArrayList<CountableIngredient> recipeInputs = new ArrayList<>();
@@ -144,31 +145,31 @@ public class MetaTileEntityMultiFurnace extends RecipeMapMultiblockController {
             /* Iterate over the input items looking for more things to add until we run either out of input items
              * or we have exceeded the number of items permissible from the smelting bonus
              */
-            for(int index = 0; index < inputs.getSlots() && currentItemsEngaged < maxItemsLimit; index++) {
+            for (int index = 0; index < inputs.getSlots() && currentItemsEngaged < maxItemsLimit; index++) {
 
                 // Skip this slot if it is empty.
                 final ItemStack currentInputItem = inputs.getStackInSlot(index);
-                if(currentInputItem.isEmpty())
+                if (currentInputItem.isEmpty())
                     continue;
 
                 // Determine if there is a valid recipe for this item. If not, skip it.
                 Recipe matchingRecipe = recipeMap.findRecipe(maxVoltage,
-                                                             Collections.singletonList(currentInputItem),
-                                                             Collections.emptyList(), 0);
+                        Collections.singletonList(currentInputItem),
+                        Collections.emptyList(), 0);
                 CountableIngredient inputIngredient;
-                if(matchingRecipe != null)
+                if (matchingRecipe != null)
                     inputIngredient = matchingRecipe.getInputs().get(0);
                 else
                     continue;
 
                 // There's something not right with this recipe if the ingredient is null.
-                if(inputIngredient == null)
+                if (inputIngredient == null)
                     throw new IllegalStateException(
-                        String.format("Got recipe with null ingredient %s", matchingRecipe));
+                            String.format("Got recipe with null ingredient %s", matchingRecipe));
 
                 // If there are enough slots left to smelt this item stack
                 int itemsLeftUntilMax = (maxItemsLimit - currentItemsEngaged);
-                if(itemsLeftUntilMax >= inputIngredient.getCount()) {
+                if (itemsLeftUntilMax >= inputIngredient.getCount()) {
 
                     /* Choose the lesser of the number of possible crafts in this ingredient's stack, or the number of
                      * items remaining to reach the coil bonus's max smelted items.
@@ -187,7 +188,7 @@ public class MetaTileEntityMultiFurnace extends RecipeMapMultiblockController {
                     boolean canFitOutputs = InventoryUtils.simulateItemStackMerge(temp, this.getOutputInventory());
 
                     // if there isn't, we can't process this recipe.
-                    if(!canFitOutputs)
+                    if (!canFitOutputs)
                         break;
 
                     // otherwise, let's add the new output items and keep going
@@ -196,25 +197,25 @@ public class MetaTileEntityMultiFurnace extends RecipeMapMultiblockController {
 
                     // Add the ingredients to the list of things to smelt.
                     recipeInputs.add(new CountableIngredient(inputIngredient.getIngredient(),
-                                                             inputIngredient.getCount() * recipeMultiplier));
+                            inputIngredient.getCount() * recipeMultiplier));
 
                     currentItemsEngaged += inputIngredient.getCount() * recipeMultiplier;
                 }
             }
 
             // If there were no accepted ingredients, then there is no recipe to process.
-            if(recipeInputs.isEmpty()) {
+            if (recipeInputs.isEmpty()) {
                 //Set here to prevent recipe deadlock on world load with full output bus
                 forceRecipeRecheck = true;
                 return null;
             }
 
             return recipeMap.recipeBuilder()
-                .inputsIngredients(recipeInputs)
-                .outputs(recipeOutputs)
-                .EUt(Math.max(1, 16 / heatingCoilDiscount))
-                .duration((int) Math.max(1.0, 256 * (currentItemsEngaged / (maxItemsLimit * 1.0))))
-                .build().getResult();
+                    .inputsIngredients(recipeInputs)
+                    .outputs(recipeOutputs)
+                    .EUt(Math.max(1, 16 / heatingCoilDiscount))
+                    .duration((int) Math.max(1.0, 256 * (currentItemsEngaged / (maxItemsLimit * 1.0))))
+                    .build().getResult();
         }
 
         /**
@@ -228,9 +229,8 @@ public class MetaTileEntityMultiFurnace extends RecipeMapMultiblockController {
          */
         private void computeOutputItemStacks(Collection<ItemStack> recipeOutputs,
                                              ItemStack outputStack,
-                                             int overclockAmount)
-        {
-            if(!outputStack.isEmpty()) {
+                                             int overclockAmount) {
+            if (!outputStack.isEmpty()) {
                 // number of output items we're generating
                 int finalAmount = outputStack.getCount() * overclockAmount;
 
@@ -244,14 +244,14 @@ public class MetaTileEntityMultiFurnace extends RecipeMapMultiblockController {
                 int remainder = finalAmount % maxCount;
 
                 // Add full stacks of the output item
-                for(int fullStacks = numStacks; fullStacks > 0; fullStacks--) {
+                for (int fullStacks = numStacks; fullStacks > 0; fullStacks--) {
                     ItemStack full = outputStack.copy();
                     full.setCount(maxCount);
                     recipeOutputs.add(full);
                 }
 
                 // if there is a partial stack, add it too
-                if(remainder > 0) {
+                if (remainder > 0) {
                     ItemStack partial = outputStack.copy();
                     partial.setCount(remainder);
                     recipeOutputs.add(partial);

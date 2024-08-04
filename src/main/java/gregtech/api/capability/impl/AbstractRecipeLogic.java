@@ -66,17 +66,17 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable 
     public AbstractRecipeLogic(MetaTileEntity tileEntity, RecipeMap<?> recipeMap) {
         this(tileEntity, recipeMap, 16);
     }
+
     public AbstractRecipeLogic(MetaTileEntity tileEntity, RecipeMap<?> recipeMap, int recipeCacheSize) {
         super(tileEntity);
         this.recipeCacheSize = recipeCacheSize;
         this.previousRecipe = new RecipeLFUCache(this.recipeCacheSize);
         this.recipeMap = recipeMap;
-        if(ConfigHolder.gregicalityOverclocking){
+        if (ConfigHolder.gregicalityOverclocking) {
             V = GTValues.V2;
             VN = GTValues.VN2;
-        }
-        else {
-            V =  GTValues.V;
+        } else {
+            V = GTValues.V;
             VN = GTValues.VN;
         }
     }
@@ -117,9 +117,9 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable 
 
     @Override
     public <T> T getCapability(Capability<T> capability) {
-        if(capability == GregtechTileCapabilities.CAPABILITY_WORKABLE) {
+        if (capability == GregtechTileCapabilities.CAPABILITY_WORKABLE) {
             return GregtechTileCapabilities.CAPABILITY_WORKABLE.cast(this);
-        } else if(capability == GregtechTileCapabilities.CAPABILITY_CONTROLLABLE) {
+        } else if (capability == GregtechTileCapabilities.CAPABILITY_CONTROLLABLE) {
             return GregtechTileCapabilities.CAPABILITY_CONTROLLABLE.cast(this);
         }
         return null;
@@ -138,7 +138,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable 
                         failCount++;
                         if (failCount == 5) {
 
-                            sleepTime = Math.min(sleepTime * 2, (ConfigHolder.maxSleepTime >= 0 && ConfigHolder.maxSleepTime <= 400) ? ConfigHolder.maxSleepTime :  20);
+                            sleepTime = Math.min(sleepTime * 2, (ConfigHolder.maxSleepTime >= 0 && ConfigHolder.maxSleepTime <= 400) ? ConfigHolder.maxSleepTime : 20);
                             failCount = 0;
 
                         }
@@ -216,11 +216,11 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable 
     }
 
     protected int getMinTankCapacity(IMultipleTankHandler tanks) {
-        if(tanks.getTanks() == 0) {
+        if (tanks.getTanks() == 0) {
             return 0;
         }
         int result = Integer.MAX_VALUE;
-        for(IFluidTank fluidTank : tanks.getFluidTanks()) {
+        for (IFluidTank fluidTank : tanks.getFluidTanks()) {
             result = Math.min(fluidTank.getCapacity(), result);
         }
         return result;
@@ -254,11 +254,11 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable 
             FluidStack currentStack = fluidInputs.getTankAt(i).getFluid();
             FluidStack lastStack = lastFluidInputs[i];
             if ((currentStack == null && lastStack != null) ||
-                (currentStack != null && !currentStack.isFluidEqual(lastStack))) {
+                    (currentStack != null && !currentStack.isFluidEqual(lastStack))) {
                 this.lastFluidInputs[i] = currentStack == null ? null : currentStack.copy();
                 shouldRecheckRecipe = true;
             } else if (currentStack != null && lastStack != null &&
-                currentStack.amount != lastStack.amount) {
+                    currentStack.amount != lastStack.amount) {
                 lastStack.amount = currentStack.amount;
                 shouldRecheckRecipe = true;
             }
@@ -268,8 +268,8 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable 
 
     protected static boolean areItemStacksEqual(ItemStack stackA, ItemStack stackB) {
         return (stackA.isEmpty() && stackB.isEmpty()) ||
-            (ItemStack.areItemsEqual(stackA, stackB) &&
-                ItemStack.areItemStackTagsEqual(stackA, stackB));
+                (ItemStack.areItemsEqual(stackA, stackB) &&
+                        ItemStack.areItemStackTagsEqual(stackA, stackB));
     }
 
     protected boolean setupAndConsumeRecipeInputs(Recipe recipe) {
@@ -280,10 +280,10 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable 
         IMultipleTankHandler importFluids = getInputTank();
         IMultipleTankHandler exportFluids = getOutputTank();
         return (totalEUt >= 0 ? getEnergyStored() >= (totalEUt > getEnergyCapacity() / 2 ? resultOverclock[0] : totalEUt) :
-            (getEnergyStored() - resultOverclock[0] <= getEnergyCapacity())) &&
-            MetaTileEntity.addItemsToItemHandler(exportInventory, true, recipe.getAllItemOutputs(exportInventory.getSlots())) &&
-            MetaTileEntity.addFluidsToFluidHandler(exportFluids, true, recipe.getFluidOutputs()) &&
-            recipe.matches(true, importInventory, importFluids);
+                (getEnergyStored() - resultOverclock[0] <= getEnergyCapacity())) &&
+                MetaTileEntity.addItemsToItemHandler(exportInventory, true, recipe.getAllItemOutputs(exportInventory.getSlots())) &&
+                MetaTileEntity.addFluidsToFluidHandler(exportFluids, true, recipe.getFluidOutputs()) &&
+                recipe.matches(true, importInventory, importFluids);
     }
 
     protected int[] calculateOverclock(int EUt, int duration) {
@@ -293,7 +293,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable 
     protected int[] calculateOverclock(int EUt, long voltage, int duration) {
 
         if (!allowOverclocking) {
-            return new int[] {EUt, duration};
+            return new int[]{EUt, duration};
         }
         boolean negativeEU = EUt < 0;
         int tier = getOverclockingTier(voltage);
@@ -301,21 +301,20 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable 
             return new int[]{EUt, duration};
         if (negativeEU)
             EUt = -EUt;
-            int resultEUt = EUt;
-            double resultDuration = duration;
-            //do not overclock further if duration is already too small
-            while (resultDuration >= 1 && resultEUt <= V[tier - 1]) {
-                resultEUt *= 4;
-                resultDuration /= 2.8;
-            }
-            return new int[]{negativeEU ? -resultEUt : resultEUt, (int) Math.ceil(resultDuration)};
+        int resultEUt = EUt;
+        double resultDuration = duration;
+        //do not overclock further if duration is already too small
+        while (resultDuration >= 1 && resultEUt <= V[tier - 1]) {
+            resultEUt *= 4;
+            resultDuration /= 2.8;
+        }
+        return new int[]{negativeEU ? -resultEUt : resultEUt, (int) Math.ceil(resultDuration)};
     }
 
     protected int getOverclockingTier(long voltage) {
-        if(ConfigHolder.gregicalityOverclocking) {
+        if (ConfigHolder.gregicalityOverclocking) {
             return GTUtility.getGATierByVoltage(voltage);
-        }
-        else{
+        } else {
             return GTUtility.getTierByVoltage(voltage);
         }
     }
@@ -329,7 +328,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable 
         final String[] result = new String[maxTier + 2];
         result[0] = "gregtech.gui.overclock.off";
         for (int i = 0; i < maxTier + 1; ++i) {
-            result[i+1] = VN[i];
+            result[i + 1] = VN[i];
         }
         return result;
     }
@@ -448,7 +447,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable 
      * Sets the overclocking policy to use getOverclockVoltage() instead of getMaxVoltage()
      * and initialises the overclock voltage to max voltage.
      * The actual value will come from the saved tag when the tile is loaded for pre-existing machines.
-     *
+     * <p>
      * NOTE: This should only be used directly after construction of the workable.
      * Use setOverclockVoltage() or setOverclockTier() for a more dynamic use case.
      */
@@ -519,7 +518,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable 
     public void deserializeNBT(NBTTagCompound compound) {
         this.workingEnabled = compound.getBoolean("WorkEnabled");
         this.progressTime = compound.getInteger("Progress");
-        if(compound.hasKey(ALLOW_OVERCLOCKING)) {
+        if (compound.hasKey(ALLOW_OVERCLOCKING)) {
             this.allowOverclocking = compound.getBoolean(ALLOW_OVERCLOCKING);
         }
         if (compound.hasKey(OVERCLOCK_VOLTAGE)) {
