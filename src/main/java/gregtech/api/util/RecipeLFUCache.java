@@ -6,8 +6,7 @@ import net.minecraftforge.items.IItemHandlerModifiable;
 
 import java.util.*;
 
-public class RecipeLFUCache
-{
+public class RecipeLFUCache {
     private final int capacity;
     private int cachedRecipeCount = 0;
     private int foundRecipeIndex = 0;
@@ -45,8 +44,8 @@ public class RecipeLFUCache
 
     public Recipe get(IItemHandlerModifiable inputItems, IMultipleTankHandler inputFluids) {
         NavigableMap<Integer, LinkedHashSet<Integer>> descendingFrequencyMap = frequencyCounter.descendingMap();
-        for(LinkedHashSet<Integer> cacheIndexes: descendingFrequencyMap.values()) {
-            for (Integer cacheIndex: cacheIndexes) {
+        for (LinkedHashSet<Integer> cacheIndexes : descendingFrequencyMap.values()) {
+            for (Integer cacheIndex : cacheIndexes) {
                 Recipe recipeCache = recipeCaches[cacheIndex];
                 if (recipeCache == null) {
                     continue;
@@ -100,8 +99,7 @@ public class RecipeLFUCache
             if (frequencyCounter.get(lowestFrequency).isEmpty()) {
                 frequencyCounter.remove(lowestFrequency);
             }
-        }
-        else {
+        } else {
             cachedRecipeCount++;
         }
         GTLog.logger.debug("Writing cache at index {}", replaceRecipeCacheIndex);

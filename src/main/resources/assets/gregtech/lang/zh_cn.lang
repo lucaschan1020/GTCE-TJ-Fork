@@ -2191,6 +2191,7 @@ gregtech.machine.quantum_chest.iv.name=黑洞量子箱 III
 
 #Quantum tanks
 gregtech.machine.quantum_tank.tooltip=储存你全部流体的简洁渠道
+gregtech.machine.quantum_tank.tooltip.voiding_enabled=流体过量销毁§a已启用
 gregtech.machine.quantum_tank.capacity=流体储量: %d 升
 
 gregtech.machine.quantum_tank.mv.name=基础量子缸
@@ -2820,6 +2821,10 @@ gregtech.gui.toggle_view.enabled=切换到物品视图
 gregtech.gui.overclock.enabled=开启超频
 gregtech.gui.overclock.disabled=关闭超频
 gregtech.gui.sort=排序
+gregtech.gui.fluid_voiding.tooltip.enabled=过量流体销毁已启用
+gregtech.gui.fluid_voiding.tooltip.disabled=过量流体销毁已禁用
+gregtech.gui.item_voiding.tooltip.enabled=过量物品销毁已启用
+gregtech.gui.item_voiding.tooltip.disabled=过量物品销毁已禁用
 
 gregtech.item_filter.empty_item=空(没有物品)
 gregtech.item_filter.footer=§e手持物品右键覆盖设置

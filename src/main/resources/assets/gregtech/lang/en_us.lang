@@ -2322,6 +2322,7 @@ gregtech.machine.quantum_chestuv.name=Quantum Chest IV
 
 #Quantum tanks
 gregtech.machine.quantum_tank.tooltip=Compact place to store all your fluids.
+gregtech.machine.quantum_tank.tooltip.voiding_enabled=Excess Fluid Voiding §aEnabled
 gregtech.machine.quantum_tank.capacity=Fluid Capacity: %,d mb
 gregtech.machine.quantum_tank.tooltip.name=Fluid Stored: §b%s
 gregtech.machine.quantum_tank.tooltip.count=Fluid Amount: §e%,d mb
@@ -2975,6 +2976,10 @@ gregtech.gui.fluid_auto_output.tooltip.enabled=Fluid Auto-Output Enabled
 gregtech.gui.fluid_auto_output.tooltip.disabled=Fluid Auto-Output Disabled
 gregtech.gui.item_auto_output.tooltip.enabled=Item Auto-Output Enabled
 gregtech.gui.item_auto_output.tooltip.disabled=Item Auto-Output Disabled
+gregtech.gui.fluid_voiding.tooltip.enabled=Excess Fluid Voiding Enabled
+gregtech.gui.fluid_voiding.tooltip.disabled=Excess Fluid Voiding Disabled
+gregtech.gui.item_voiding.tooltip.enabled=Excess Item Voiding Enabled
+gregtech.gui.item_voiding.tooltip.disabled=Excess Item Voiding Disabled
 
 gregtech.jei.ore_by_product_from_ore=Use %s for %s
 gregtech.jei.ore_by_product_from_machine=Produce by processing %s with %s

@@ -9,7 +9,7 @@ import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.recipes.Recipe;
 import gregtech.api.recipes.RecipeMap;
 import gregtech.api.util.GTUtility;
-import gregtech.api.util.RecipeLFUCache;
+import gregtech.api.util.RecipeLRUCache;
 import gregtech.common.ConfigHolder;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -39,7 +39,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable 
     protected boolean forceRecipeRecheck;
     protected ItemStack[] lastItemInputs;
     protected FluidStack[] lastFluidInputs;
-    public RecipeLFUCache previousRecipe;
+    public RecipeLRUCache previousRecipe;
     public int recipeCacheSize;
     protected boolean allowOverclocking = true;
     private long overclockVoltage = 0;
@@ -70,7 +70,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable 
     public AbstractRecipeLogic(MetaTileEntity tileEntity, RecipeMap<?> recipeMap, int recipeCacheSize) {
         super(tileEntity);
         this.recipeCacheSize = recipeCacheSize;
-        this.previousRecipe = new RecipeLFUCache(this.recipeCacheSize);
+        this.previousRecipe = new RecipeLRUCache(this.recipeCacheSize);
         this.recipeMap = recipeMap;
         if (ConfigHolder.gregicalityOverclocking) {
             V = GTValues.V2;
