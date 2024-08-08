@@ -387,7 +387,7 @@ public abstract class MetaTileEntity implements ICoverable {
      *
      * @return true if something happened
      */
-    public boolean onMinecraftStickClick(EntityPlayer playerIn, EnumHand hand, CuboidRayTraceResult hitResult) {
+    public boolean OnSawToolCLick(EntityPlayer playerIn, EnumHand hand, CuboidRayTraceResult hitResult) {
         return false;
     }
 
