@@ -28,6 +28,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidTank;
+import net.minecraftforge.fluids.capability.templates.FluidHandlerItemStack;
 import net.minecraftforge.items.ItemStackHandler;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -116,7 +117,12 @@ public class MetaTileEntityQuantumTank extends MetaTileEntity implements ITiered
     @Override
     public void writeItemStackData(NBTTagCompound itemStack) {
         super.writeItemStackData(itemStack);
-        fluidTank.writeToNBT(itemStack);
+        FluidStack fluidStack = fluidTank.getFluid();
+        if (fluidStack != null && fluidStack.amount > 0) {
+            NBTTagCompound tagCompound = new NBTTagCompound();
+            fluidStack.writeToNBT(tagCompound);
+            itemStack.setTag(FluidHandlerItemStack.FLUID_NBT_KEY, tagCompound);
+        }
         if (this.voiding) {
             itemStack.setBoolean("IsVoiding", true);
         }
