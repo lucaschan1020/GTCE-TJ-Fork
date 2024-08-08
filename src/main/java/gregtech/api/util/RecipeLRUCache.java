@@ -11,9 +11,9 @@ public class RecipeLRUCache {
     private final int capacity;
     private Recipe lastAccessedRecipe;
     private final LinkedList<Recipe> recipeCaches;
-
     private int cacheHit = 0;
     private int cacheMiss = 0;
+    private boolean isReadAscending = true;
 
     public RecipeLRUCache(int capacity) {
         this.capacity = capacity;
@@ -32,7 +32,27 @@ public class RecipeLRUCache {
         return this.cacheMiss;
     }
 
+    public boolean getIsReadAscending() {
+        return this.isReadAscending;
+    }
+
+    public void setIsReadAscending(boolean isAscending) {
+        this.isReadAscending = isAscending;
+    }
+
+    public boolean toggleIsReadAscending() {
+        setIsReadAscending(!this.isReadAscending);
+        return this.isReadAscending;
+    }
+
+    public void clear() {
+        this.recipeCaches.clear();
+    }
+
     public Recipe get(IItemHandlerModifiable inputItems, IMultipleTankHandler inputFluids) {
+        if (!this.isReadAscending) {
+            return getReverse(inputItems, inputFluids);
+        }
         for (Recipe recipeCache : this.recipeCaches) {
             boolean foundMatches = recipeCache.matches(false, inputItems, inputFluids);
             if (foundMatches) {
@@ -42,7 +62,6 @@ public class RecipeLRUCache {
         }
         return null;
     }
-
 
     public Recipe getReverse(IItemHandlerModifiable inputItems, IMultipleTankHandler inputFluids) {
         Iterator<Recipe> recipeCachesIterator = this.recipeCaches.descendingIterator();

@@ -1,5 +1,6 @@
 package gregtech.api.metatileentity.multiblock;
 
+import codechicken.lib.raytracer.CuboidRayTraceResult;
 import codechicken.lib.render.CCRenderState;
 import codechicken.lib.render.pipeline.IVertexOperation;
 import codechicken.lib.vec.Matrix4;
@@ -16,6 +17,9 @@ import gregtech.api.recipes.Recipe;
 import gregtech.api.recipes.RecipeMap;
 import gregtech.api.util.GTUtility;
 import gregtech.common.ConfigHolder;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.*;
 import net.minecraftforge.items.IItemHandler;
@@ -167,5 +171,39 @@ public abstract class RecipeMapMultiblockController extends MultiblockWithDispla
     public void renderMetaTileEntity(CCRenderState renderState, Matrix4 translation, IVertexOperation[] pipeline) {
         super.renderMetaTileEntity(renderState, translation, pipeline);
         this.getFrontOverlay().render(renderState, translation, pipeline, getFrontFacing(), recipeMapWorkable.isActive());
+    }
+
+    @Override
+    public boolean onMinecraftStickClick(EntityPlayer playerIn, EnumHand hand, CuboidRayTraceResult hitResult) {
+        if (playerIn.isSneaking()) {
+            this.recipeMapWorkable.previousRecipe.clear();
+            markDirty();
+            playerIn.sendMessage(new TextComponentString("The recipe cache has been cleared."));
+            return true;
+        }
+        boolean isAscending = this.recipeMapWorkable.previousRecipe.toggleIsReadAscending();
+        markDirty();
+        if (isAscending) {
+            playerIn.sendMessage(new TextComponentString("Search recipe from the cache sequentially (starting from the most recently used, better performance)"));
+        }
+        else {
+            playerIn.sendMessage(new TextComponentString("Search recipe from the cache using a round-robin method (starting from the least recently used cache, may cause slightly lower performance)"));
+        }
+        return true;
+    }
+
+    @Override
+    public NBTTagCompound writeToNBT(NBTTagCompound data) {
+        NBTTagCompound tagCompound = super.writeToNBT(data);
+        tagCompound.setBoolean("RecipeCacheIsReadAscending", this.recipeMapWorkable.previousRecipe.getIsReadAscending());
+        return tagCompound;
+    }
+
+    @Override
+    public void readFromNBT(NBTTagCompound data) {
+        super.readFromNBT(data);
+        if (data.hasKey("RecipeCacheIsReadAscending")) {
+            this.recipeMapWorkable.previousRecipe.setIsReadAscending(data.getBoolean("RecipeCacheIsReadAscending"));
+        }
     }
 }
