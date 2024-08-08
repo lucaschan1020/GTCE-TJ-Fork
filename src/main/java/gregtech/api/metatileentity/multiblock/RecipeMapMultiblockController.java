@@ -1,5 +1,6 @@
 package gregtech.api.metatileentity.multiblock;
 
+import codechicken.lib.raytracer.CuboidRayTraceResult;
 import codechicken.lib.render.CCRenderState;
 import codechicken.lib.render.pipeline.IVertexOperation;
 import codechicken.lib.vec.Matrix4;
@@ -16,11 +17,11 @@ import gregtech.api.recipes.Recipe;
 import gregtech.api.recipes.RecipeMap;
 import gregtech.api.util.GTUtility;
 import gregtech.common.ConfigHolder;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.Style;
-import net.minecraft.util.text.TextComponentTranslation;
-import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.*;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.IItemHandlerModifiable;
 import net.minecraftforge.items.ItemStackHandler;
@@ -41,9 +42,13 @@ public abstract class RecipeMapMultiblockController extends MultiblockWithDispla
     protected IEnergyContainer energyContainer;
 
     public RecipeMapMultiblockController(ResourceLocation metaTileEntityId, RecipeMap<?> recipeMap) {
+        this(metaTileEntityId, recipeMap, 16);
+    }
+
+    public RecipeMapMultiblockController(ResourceLocation metaTileEntityId, RecipeMap<?> recipeMap, int recipeCacheSize) {
         super(metaTileEntityId);
         this.recipeMap = recipeMap;
-        this.recipeMapWorkable = new MultiblockRecipeLogic(this);
+        this.recipeMapWorkable = new MultiblockRecipeLogic(this, recipeCacheSize);
         resetTileAbilities();
     }
 
@@ -121,10 +126,9 @@ public abstract class RecipeMapMultiblockController extends MultiblockWithDispla
             IEnergyContainer energyContainer = recipeMapWorkable.getEnergyContainer();
             if (energyContainer != null && energyContainer.getEnergyCapacity() > 0) {
                 long maxVoltage = energyContainer.getInputVoltage();
-                if(ConfigHolder.gregicalityOverclocking){
+                if (ConfigHolder.gregicalityOverclocking) {
                     voltageName = GTValues.VN2[GTUtility.getGATierByVoltage(maxVoltage)];
-                }
-                else {
+                } else {
                     voltageName = GTValues.VN[GTUtility.getTierByVoltage(maxVoltage)];
                 }
                 textList.add(new TextComponentTranslation("gregtech.multiblock.max_energy_per_tick", maxVoltage, voltageName));
@@ -144,6 +148,8 @@ public abstract class RecipeMapMultiblockController extends MultiblockWithDispla
             if (recipeMapWorkable.isHasNotEnoughEnergy()) {
                 textList.add(new TextComponentTranslation("gregtech.multiblock.not_enough_energy").setStyle(new Style().setColor(TextFormatting.RED)));
             }
+            textList.add(new TextComponentString(String.format("Cache size (%s) hit (%s) miss (%s)", this.recipeMapWorkable.previousRecipe.getCachedRecipeCount(), this.recipeMapWorkable.previousRecipe.getCacheHit(), this.recipeMapWorkable.previousRecipe.getCacheMiss()))
+                    .setStyle(new Style().setColor(TextFormatting.WHITE)));
         }
     }
 
@@ -152,18 +158,52 @@ public abstract class RecipeMapMultiblockController extends MultiblockWithDispla
         //basically check minimal requirements for inputs count
         //noinspection SuspiciousMethodCalls
         int itemInputsCount = abilities.getOrDefault(MultiblockAbility.IMPORT_ITEMS, Collections.emptyList())
-            .stream().map(it -> (IItemHandler) it).mapToInt(IItemHandler::getSlots).sum();
+                .stream().map(it -> (IItemHandler) it).mapToInt(IItemHandler::getSlots).sum();
         //noinspection SuspiciousMethodCalls
         int fluidInputsCount = abilities.getOrDefault(MultiblockAbility.IMPORT_FLUIDS, Collections.emptyList()).size();
         //noinspection SuspiciousMethodCalls
         return itemInputsCount >= recipeMap.getMinInputs() &&
-            fluidInputsCount >= recipeMap.getMinFluidInputs() &&
-            abilities.containsKey(MultiblockAbility.INPUT_ENERGY);
+                fluidInputsCount >= recipeMap.getMinFluidInputs() &&
+                abilities.containsKey(MultiblockAbility.INPUT_ENERGY);
     }
 
     @Override
     public void renderMetaTileEntity(CCRenderState renderState, Matrix4 translation, IVertexOperation[] pipeline) {
         super.renderMetaTileEntity(renderState, translation, pipeline);
         this.getFrontOverlay().render(renderState, translation, pipeline, getFrontFacing(), recipeMapWorkable.isActive());
+    }
+
+    @Override
+    public boolean onMinecraftStickClick(EntityPlayer playerIn, EnumHand hand, CuboidRayTraceResult hitResult) {
+        if (playerIn.isSneaking()) {
+            this.recipeMapWorkable.previousRecipe.clear();
+            markDirty();
+            playerIn.sendMessage(new TextComponentString("The recipe cache has been cleared."));
+            return true;
+        }
+        boolean isAscending = this.recipeMapWorkable.previousRecipe.toggleIsReadAscending();
+        markDirty();
+        if (isAscending) {
+            playerIn.sendMessage(new TextComponentString("Search recipe from the cache sequentially (starting from the most recently used, better performance)"));
+        }
+        else {
+            playerIn.sendMessage(new TextComponentString("Search recipe from the cache using a round-robin method (starting from the least recently used cache, may cause slightly lower performance)"));
+        }
+        return true;
+    }
+
+    @Override
+    public NBTTagCompound writeToNBT(NBTTagCompound data) {
+        NBTTagCompound tagCompound = super.writeToNBT(data);
+        tagCompound.setBoolean("RecipeCacheIsReadAscending", this.recipeMapWorkable.previousRecipe.getIsReadAscending());
+        return tagCompound;
+    }
+
+    @Override
+    public void readFromNBT(NBTTagCompound data) {
+        super.readFromNBT(data);
+        if (data.hasKey("RecipeCacheIsReadAscending")) {
+            this.recipeMapWorkable.previousRecipe.setIsReadAscending(data.getBoolean("RecipeCacheIsReadAscending"));
+        }
     }
 }

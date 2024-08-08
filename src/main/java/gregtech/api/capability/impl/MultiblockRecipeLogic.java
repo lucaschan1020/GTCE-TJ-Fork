@@ -7,10 +7,12 @@ import gregtech.api.recipes.Recipe;
 import net.minecraftforge.items.IItemHandlerModifiable;
 
 public class MultiblockRecipeLogic extends AbstractRecipeLogic {
-
-
     public MultiblockRecipeLogic(RecipeMapMultiblockController tileEntity) {
-        super(tileEntity, tileEntity.recipeMap);
+        this(tileEntity, 16);
+    }
+
+    public MultiblockRecipeLogic(RecipeMapMultiblockController tileEntity, int recipeCacheSize) {
+        super(tileEntity, tileEntity.recipeMap, recipeCacheSize);
     }
 
     @Override

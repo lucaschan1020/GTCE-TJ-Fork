@@ -2203,6 +2203,7 @@ gregtech.machine.quantum_chest.iv.name=Квантовый сундук на че
 
 # Квантовые резервуар
 gregtech.machine.quantum_tank.tooltip=Компактное место для хранения всех ваших жидкостей.
+gregtech.machine.quantum_tank.tooltip.voiding_enabled=Удаление избытков жидкости §aВключен
 gregtech.machine.quantum_tank.capacity=Объем жидкости: %d мВ
 
 gregtech.machine.quantum_tank.mv.name=Базовый квантовый резервуар
@@ -2841,6 +2842,8 @@ gregtech.gui.toggle_view.enabled=Переключить вид (Предметы
 gregtech.gui.overclock.enabled=Разрешить разгон
 gregtech.gui.overclock.disabled=Запретить разгон
 gregtech.gui.sort=Сортировать
+gregtech.gui.fluid_voiding.tooltip.enabled=Удаление избытков жидкости Включен
+gregtech.gui.fluid_voiding.tooltip.disabled=Удаление избытков жидкости Выключен
 
 gregtech.item_filter.empty_item=Пусто (нет предмета)
 gregtech.item_filter.footer=§eНажмите с предметом, чтобы переопределить

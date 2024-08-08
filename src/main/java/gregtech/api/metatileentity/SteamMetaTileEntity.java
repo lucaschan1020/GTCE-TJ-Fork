@@ -20,9 +20,11 @@ import gregtech.api.render.Textures;
 import gregtech.api.util.GTUtility;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.TextComponentString;
 import net.minecraftforge.fluids.FluidTank;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -40,9 +42,12 @@ public abstract class SteamMetaTileEntity extends MetaTileEntity {
     protected FluidTank steamFluidTank;
 
     public SteamMetaTileEntity(ResourceLocation metaTileEntityId, RecipeMap<?> recipeMap, OrientedOverlayRenderer renderer, boolean isHighPressure) {
+        this(metaTileEntityId, recipeMap, renderer, isHighPressure, 16);
+    }
+    public SteamMetaTileEntity(ResourceLocation metaTileEntityId, RecipeMap<?> recipeMap, OrientedOverlayRenderer renderer, boolean isHighPressure, int recipeCacheSize) {
         super(metaTileEntityId);
         this.workableHandler = new RecipeLogicSteam(this,
-            recipeMap, isHighPressure, steamFluidTank, 1.0);
+            recipeMap, isHighPressure, steamFluidTank, 1.0, recipeCacheSize);
         this.isHighPressure = isHighPressure;
         this.renderer = renderer;
         BRONZE_BACKGROUND_TEXTURE = getFullGuiTexture("%s_gui");
@@ -119,5 +124,39 @@ public abstract class SteamMetaTileEntity extends MetaTileEntity {
             .widget(new ImageWidget(79, 42, 18, 18, getFullGuiTexture("not_enough_steam_%s"))
                 .setPredicate(() -> workableHandler.isHasNotEnoughEnergy()))
             .bindPlayerInventory(player.inventory, BRONZE_SLOT_BACKGROUND_TEXTURE);
+    }
+
+    @Override
+    public boolean onMinecraftStickClick(EntityPlayer playerIn, EnumHand hand, CuboidRayTraceResult hitResult) {
+        if (playerIn.isSneaking()) {
+            this.workableHandler.previousRecipe.clear();
+            markDirty();
+            playerIn.sendMessage(new TextComponentString("The recipe cache has been cleared."));
+            return true;
+        }
+        boolean isAscending = this.workableHandler.previousRecipe.toggleIsReadAscending();
+        markDirty();
+        if (isAscending) {
+            playerIn.sendMessage(new TextComponentString("Search recipe from the cache sequentially (starting from the most recently used, better performance)"));
+        }
+        else {
+            playerIn.sendMessage(new TextComponentString("Search recipe from the cache using a round-robin method (starting from the least recently used cache, may cause slightly lower performance)"));
+        }
+        return true;
+    }
+
+    @Override
+    public NBTTagCompound writeToNBT(NBTTagCompound data) {
+        NBTTagCompound tagCompound = super.writeToNBT(data);
+        tagCompound.setBoolean("RecipeCacheIsReadAscending", this.workableHandler.previousRecipe.getIsReadAscending());
+        return tagCompound;
+    }
+
+    @Override
+    public void readFromNBT(NBTTagCompound data) {
+        super.readFromNBT(data);
+        if (data.hasKey("RecipeCacheIsReadAscending")) {
+            this.workableHandler.previousRecipe.setIsReadAscending(data.getBoolean("RecipeCacheIsReadAscending"));
+        }
     }
 }

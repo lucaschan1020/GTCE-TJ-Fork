@@ -5,6 +5,7 @@ import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidTankProperties;
 
 import javax.annotation.Nonnull;
+import java.util.List;
 import java.util.function.Predicate;
 
 public class GTFluidUtils {
@@ -60,5 +61,15 @@ public class GTFluidUtils {
             }
         }
         return false;
+    }
+
+    public static boolean simulateFluidStackMerge(List<FluidStack> fluids, IFluidHandler handler) {
+        boolean filledAll = true;
+        for (FluidStack stack : fluids) {
+            int filled = handler.fill(stack, false);
+            filledAll &= filled == stack.amount;
+            if (!filledAll) return false;
+        }
+        return filledAll;
     }
 }

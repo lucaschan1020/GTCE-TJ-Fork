@@ -382,6 +382,15 @@ public abstract class MetaTileEntity implements ICoverable {
         return false;
     }
 
+    /**
+     * Called when player right clicks minecraft stick on this meta tile entity
+     *
+     * @return true if something happened
+     */
+    public boolean onMinecraftStickClick(EntityPlayer playerIn, EnumHand hand, CuboidRayTraceResult hitResult) {
+        return false;
+    }
+
     public void onLeftClick(EntityPlayer player, EnumFacing facing, CuboidRayTraceResult hitResult) {
     }
 

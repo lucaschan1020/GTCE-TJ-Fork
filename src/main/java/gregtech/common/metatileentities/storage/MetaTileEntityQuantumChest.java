@@ -10,6 +10,7 @@ import gregtech.api.gui.ModularUI;
 import gregtech.api.gui.ModularUI.Builder;
 import gregtech.api.gui.widgets.AdvancedTextWidget;
 import gregtech.api.gui.widgets.SlotWidget;
+import gregtech.api.gui.widgets.ToggleButtonWidget;
 import gregtech.api.metatileentity.ITieredMetaTileEntity;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.MetaTileEntityHolder;
@@ -21,7 +22,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.ITextComponent;
@@ -51,6 +51,8 @@ public class MetaTileEntityQuantumChest extends MetaTileEntity implements ITiere
     private static final String NBT_ITEMSTACK = "ItemStack";
     private static final String NBT_PARTIALSTACK = "PartialStack";
     private static final String NBT_ITEMCOUNT = "ItemAmount";
+    private static final String IS_VOIDING = "IsVoiding";
+    protected boolean voiding;
 
     public MetaTileEntityQuantumChest(ResourceLocation metaTileEntityId, int tier, long maxStoredItems) {
         super(metaTileEntityId);
@@ -71,7 +73,7 @@ public class MetaTileEntityQuantumChest extends MetaTileEntity implements ITiere
     @Override
     public void renderMetaTileEntity(CCRenderState renderState, Matrix4 translation, IVertexOperation[] pipeline) {
         Textures.VOLTAGE_CASINGS[tier].render(renderState, translation, ArrayUtils.add(pipeline,
-            new ColourMultiplier(GTUtility.convertRGBtoOpaqueRGBA_CL(getPaintingColorForRendering()))));
+                new ColourMultiplier(GTUtility.convertRGBtoOpaqueRGBA_CL(getPaintingColorForRendering()))));
         translation.translate(0.5, 0.001, 0.5);
         translation.rotate(Math.toRadians(rotations[getFrontFacing().getIndex() - 2]), new Vector3(0.0, 1.0, 0.0));
         translation.translate(-0.5, 0.0, -0.5);
@@ -125,12 +127,21 @@ public class MetaTileEntityQuantumChest extends MetaTileEntity implements ITiere
                     markDirty();
                 }
             }
+
+            if (isVoiding()) {
+                ItemStack inputStack = importItems.getStackInSlot(0);
+                if (inputStack.isEmpty()) return;
+                boolean similarItemStack = areItemStackIdentical(itemStack, inputStack);
+                if (similarItemStack) {
+                    importItems.setStackInSlot(0, ItemStack.EMPTY);
+                }
+            }
         }
     }
 
     private static boolean areItemStackIdentical(ItemStack first, ItemStack second) {
         return ItemStack.areItemsEqual(first, second) &&
-            ItemStack.areItemStackTagsEqual(first, second);
+                ItemStack.areItemStackTagsEqual(first, second);
     }
 
     protected void addDisplayInformation(List<ITextComponent> textList) {
@@ -191,6 +202,7 @@ public class MetaTileEntityQuantumChest extends MetaTileEntity implements ITiere
             tagCompound.setTag(NBT_ITEMSTACK, itemStack.writeToNBT(new NBTTagCompound()));
             tagCompound.setLong(NBT_ITEMCOUNT, itemsStoredInside);
         }
+        data.setBoolean(IS_VOIDING, voiding);
         return tagCompound;
     }
 
@@ -202,6 +214,9 @@ public class MetaTileEntityQuantumChest extends MetaTileEntity implements ITiere
             if (!itemStack.isEmpty()) {
                 this.itemsStoredInside = data.getLong(NBT_ITEMCOUNT);
             }
+        }
+        if (data.hasKey(IS_VOIDING)) {
+            this.voiding = data.getBoolean(IS_VOIDING);
         }
     }
 
@@ -215,6 +230,9 @@ public class MetaTileEntityQuantumChest extends MetaTileEntity implements ITiere
             }
         } else if (itemStack.hasKey(NBT_PARTIALSTACK, NBT.TAG_COMPOUND)) {
             exportItems.setStackInSlot(0, new ItemStack(itemStack.getCompoundTag(NBT_PARTIALSTACK)));
+        }
+        if (itemStack.getBoolean(IS_VOIDING)) {
+            setVoiding(true);
         }
     }
 
@@ -230,6 +248,9 @@ public class MetaTileEntityQuantumChest extends MetaTileEntity implements ITiere
                 itemStack.setTag(NBT_PARTIALSTACK, partialStack.writeToNBT(new NBTTagCompound()));
             }
         }
+        if (this.voiding) {
+            itemStack.setBoolean(IS_VOIDING, true);
+        }
         this.itemStack = ItemStack.EMPTY;
         this.itemsStoredInside = 0;
         exportItems.setStackInSlot(0, ItemStack.EMPTY);
@@ -241,12 +262,28 @@ public class MetaTileEntityQuantumChest extends MetaTileEntity implements ITiere
         builder.image(7, 16, 81, 55, GuiTextures.DISPLAY);
         builder.widget(new AdvancedTextWidget(11, 20, this::addDisplayInformation, 0xFFFFFF));
         return builder.label(6, 6, getMetaFullName())
-            .widget(new SlotWidget(importItems, 0, 90, 17, true, true)
-                .setBackgroundTexture(GuiTextures.SLOT, GuiTextures.IN_SLOT_OVERLAY))
-            .widget(new SlotWidget(exportItems, 0, 90, 54, true, false)
-                .setBackgroundTexture(GuiTextures.SLOT, GuiTextures.OUT_SLOT_OVERLAY))
-            .bindPlayerInventory(entityPlayer.inventory)
-            .build(getHolder(), entityPlayer);
+                .widget(new SlotWidget(importItems, 0, 90, 17, true, true)
+                        .setBackgroundTexture(GuiTextures.SLOT, GuiTextures.IN_SLOT_OVERLAY))
+                .widget(new SlotWidget(exportItems, 0, 90, 54, true, false)
+                        .setBackgroundTexture(GuiTextures.SLOT, GuiTextures.OUT_SLOT_OVERLAY))
+                .widget(new ToggleButtonWidget(151, 64, 18, 18,
+                        GuiTextures.BUTTON_ITEM_VOID, this::isVoiding, this::setVoiding)
+                        .setTooltipText("gregtech.gui.item_voiding.tooltip")
+                        .shouldUseBaseBackground())
+                .bindPlayerInventory(entityPlayer.inventory)
+                .build(getHolder(), entityPlayer);
+    }
+
+    protected boolean isVoiding() {
+        return this.voiding;
+    }
+
+    protected void setVoiding(boolean isVoiding) {
+        this.voiding = isVoiding;
+        if (!getWorld().isRemote) {
+//            writeCustomData(UPDATE_IS_VOIDING, buf -> buf.writeBoolean(this.voiding));
+            markDirty();
+        }
     }
 
     private class QuantumChestItemHandler implements IItemHandler {
@@ -313,7 +350,7 @@ public class MetaTileEntityQuantumChest extends MetaTileEntity implements ITiere
             boolean insertMatching = areItemStackIdentical(stack, exportItems);
 
             // If the item being inserted does not match the item in the export slot, insert into the input slot and do not virtualize
-            if(!insertMatching) {
+            if (!insertMatching) {
                 return MetaTileEntityQuantumChest.this.importItems.insertItem(0, stack, simulate);
             }
 
@@ -326,7 +363,7 @@ public class MetaTileEntityQuantumChest extends MetaTileEntity implements ITiere
             amountInsertedIntoExport = Math.min(spaceInExport, stack.getCount());
 
             // If we had more Items than would fit into the export slot, virtualize the remainder
-            if(amountInsertedIntoExport < stack.getCount()) {
+            if (amountInsertedIntoExport < stack.getCount()) {
                 long amountLeftInChest = itemStack.isEmpty() ? maxStoredItems : maxStoredItems - itemsStoredInside;
                 insertedAmount = (int) Math.min(stack.getCount() - amountInsertedIntoExport, amountLeftInChest);
 
@@ -351,7 +388,11 @@ public class MetaTileEntityQuantumChest extends MetaTileEntity implements ITiere
                     MetaTileEntityQuantumChest.this.itemsStoredInside += insertedAmount;
                 }
             }
-            return remainingStack;
+            if (isVoiding() && remainingStack.getCount() > 0) {
+                return ItemStack.EMPTY;
+            } else {
+                return remainingStack;
+            }
         }
     }
 

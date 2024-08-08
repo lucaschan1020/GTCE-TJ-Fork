@@ -313,7 +313,12 @@ public class SimpleMachineMetaTileEntity extends WorkableTieredMetaTileEntity im
 
     @Override
     protected RecipeLogicEnergy createWorkable(RecipeMap<?> recipeMap) {
-        final RecipeLogicEnergy result = super.createWorkable(recipeMap);
+        return createWorkable(recipeMap, 16);
+    }
+
+    @Override
+    protected RecipeLogicEnergy createWorkable(RecipeMap<?> recipeMap, int recipeCacheSize) {
+        final RecipeLogicEnergy result = super.createWorkable(recipeMap, 16);
         result.enableOverclockVoltage();
         return result;
     }

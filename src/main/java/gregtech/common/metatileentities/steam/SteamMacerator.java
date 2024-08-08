@@ -17,9 +17,9 @@ import net.minecraftforge.items.ItemStackHandler;
 public class SteamMacerator extends SteamMetaTileEntity {
 
     public SteamMacerator(ResourceLocation metaTileEntityId, boolean isHighPressure) {
-        super(metaTileEntityId, RecipeMaps.MACERATOR_RECIPES, Textures.MACERATOR_OVERLAY, isHighPressure);
+        super(metaTileEntityId, RecipeMaps.MACERATOR_RECIPES, Textures.MACERATOR_OVERLAY, isHighPressure, 64);
         this.workableHandler = new RecipeLogicSteam(this,
-            workableHandler.recipeMap, isHighPressure, steamFluidTank, 1.0);
+            workableHandler.recipeMap, isHighPressure, steamFluidTank, 1.0, 64);
     }
 
     @Override

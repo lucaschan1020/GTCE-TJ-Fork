@@ -48,6 +48,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.Explosion;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+import net.minecraft.init.Items;
 import net.minecraftforge.common.property.ExtendedBlockState;
 import net.minecraftforge.common.property.IExtendedBlockState;
 import net.minecraftforge.common.property.IUnlistedProperty;
@@ -294,6 +295,13 @@ public class BlockMachine extends BlockCustomParticle implements ITileEntityProv
                 return true;
             }
             return false;
+        }
+
+        if (ItemStack.areItemsEqual(itemStack, new ItemStack(Items.STICK))) {
+            if (!worldIn.isRemote) {
+                metaTileEntity.onMinecraftStickClick(playerIn, hand, rayTraceResult);
+            }
+            return true;
         }
 
         return metaTileEntity.onCoverRightClick(playerIn, hand, rayTraceResult);
