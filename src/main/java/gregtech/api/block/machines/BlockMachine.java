@@ -18,6 +18,7 @@ import gregtech.api.cover.IFacadeCover;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.MetaTileEntityHolder;
 import gregtech.api.render.MetaTileEntityRenderer;
+import gregtech.common.items.MetaItems;
 import gregtech.common.tools.DamageValues;
 import gregtech.api.render.IBlockAppearance;
 import gregtech.integration.ctm.IFacadeWrapper;
@@ -48,7 +49,6 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.Explosion;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
-import net.minecraft.init.Items;
 import net.minecraftforge.common.property.ExtendedBlockState;
 import net.minecraftforge.common.property.IExtendedBlockState;
 import net.minecraftforge.common.property.IUnlistedProperty;
@@ -297,9 +297,9 @@ public class BlockMachine extends BlockCustomParticle implements ITileEntityProv
             return false;
         }
 
-        if (ItemStack.areItemsEqual(itemStack, new ItemStack(Items.STICK))) {
+        if(playerIn.getHeldItemMainhand().isItemEqual(MetaItems.SAW.getStackForm())){
             if (!worldIn.isRemote) {
-                metaTileEntity.onMinecraftStickClick(playerIn, hand, rayTraceResult);
+                metaTileEntity.onSawToolClick(playerIn, hand, rayTraceResult);
             }
             return true;
         }
