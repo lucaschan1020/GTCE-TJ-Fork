@@ -21,8 +21,8 @@ import java.util.function.Supplier;
 public class LargeTurbineWorkableHandler extends FuelRecipeLogic {
 
     private static final int CYCLE_LENGTH = 230;
-    private static final int BASE_ROTOR_DAMAGE = 11;
-    private static final long BASE_EU_OUTPUT = 2048;
+    private static final int BASE_ROTOR_DAMAGE = 22;
+    private static final long BASE_EU_OUTPUT = 512;
 
     private MetaTileEntityLargeTurbine largeTurbine;
     private int rotorCycleLength = CYCLE_LENGTH;
@@ -55,8 +55,10 @@ public class LargeTurbineWorkableHandler extends FuelRecipeLogic {
     @Override
     public boolean checkRecipe(FuelRecipe recipe) {
         MetaTileEntityRotorHolder rotorHolder = largeTurbine.getAbilities(MetaTileEntityLargeTurbine.ABILITY_ROTOR_HOLDER).get(0);
+        int baseRotorDamage = BASE_ROTOR_DAMAGE;
         if (++rotorCycleLength >= CYCLE_LENGTH) {
-            int damageToBeApplied = (int) Math.round(BASE_ROTOR_DAMAGE * rotorHolder.getRelativeRotorSpeed()) + 1;
+            if (largeTurbine.turbineType != TurbineType.STEAM) baseRotorDamage = 150;
+            int damageToBeApplied = (int) Math.round(baseRotorDamage * rotorHolder.getRelativeRotorSpeed()) + 1;
             if (rotorHolder.applyDamageToRotor(damageToBeApplied, false)) {
                 this.rotorCycleLength = 0;
                 return true;
