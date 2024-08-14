@@ -181,13 +181,13 @@ public abstract class RecipeMapMultiblockController extends MultiblockWithDispla
             playerIn.sendMessage(new TextComponentString("The recipe cache has been cleared."));
             return true;
         }
-        boolean isAscending = this.recipeMapWorkable.previousRecipe.toggleIsReadAscending();
+        boolean useOptimizedRecipeLookUp = this.recipeMapWorkable.toggleUseOptimizedRecipeLookUp();
         markDirty();
-        if (isAscending) {
-            playerIn.sendMessage(new TextComponentString("Search recipe from the cache sequentially (starting from the most recently used, better performance)"));
+        if (useOptimizedRecipeLookUp) {
+            playerIn.sendMessage(new TextComponentString("Using optimized recipe lookup, might fail to detects some of the recipes"));
         }
         else {
-            playerIn.sendMessage(new TextComponentString("Search recipe from the cache using a round-robin method (starting from the least recently used cache, may cause slightly lower performance)"));
+            playerIn.sendMessage(new TextComponentString("Using unoptimized recipe lookup, can detects all of the recipes but with poor performance"));
         }
         return true;
     }
@@ -195,15 +195,15 @@ public abstract class RecipeMapMultiblockController extends MultiblockWithDispla
     @Override
     public NBTTagCompound writeToNBT(NBTTagCompound data) {
         NBTTagCompound tagCompound = super.writeToNBT(data);
-        tagCompound.setBoolean("RecipeCacheIsReadAscending", this.recipeMapWorkable.previousRecipe.getIsReadAscending());
+        tagCompound.setBoolean("UseOptimizedRecipeLookUp", this.recipeMapWorkable.getUseOptimizedRecipeLookUp());
         return tagCompound;
     }
 
     @Override
     public void readFromNBT(NBTTagCompound data) {
         super.readFromNBT(data);
-        if (data.hasKey("RecipeCacheIsReadAscending")) {
-            this.recipeMapWorkable.previousRecipe.setIsReadAscending(data.getBoolean("RecipeCacheIsReadAscending"));
+        if (data.hasKey("UseOptimizedRecipeLookUp")) {
+            this.recipeMapWorkable.setUseOptimizedRecipeLookUp(data.getBoolean("UseOptimizedRecipeLookUp"));
         }
     }
 }
