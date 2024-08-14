@@ -41,7 +41,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable 
     protected FluidStack[] lastFluidInputs;
     public RecipeLRUCache previousRecipe;
     public int recipeCacheSize;
-    private boolean useOptimizedRecipeLookUp = true;
+    protected boolean useOptimizedRecipeLookUp = true;
     protected boolean allowOverclocking = true;
     private long overclockVoltage = 0;
     private LongSupplier overclockPolicy = this::getMaxVoltage;
