@@ -35,8 +35,8 @@ public class RecipeMapBrewer extends RecipeMap<SimpleRecipeBuilder> {
 
     @Nullable
     @Override
-    public Recipe findRecipe(long voltage, List<ItemStack> inputs, List<FluidStack> fluidInputs, int outputFluidTankCapacity, MatchingMode mode) {
-        Recipe recipe = super.findRecipe(voltage, inputs, fluidInputs, outputFluidTankCapacity, mode);
+    public Recipe findRecipe(long voltage, List<ItemStack> inputs, List<FluidStack> fluidInputs, int outputFluidTankCapacity, MatchingMode mode, boolean useOptimizedRecipeLookUp) {
+        Recipe recipe = super.findRecipe(voltage, inputs, fluidInputs, outputFluidTankCapacity, mode, useOptimizedRecipeLookUp);
         if (recipe != null ||
             GTUtility.amountOfNonNullElements(fluidInputs) < 1 ||
             GTUtility.amountOfNonEmptyStacks(inputs) < 1) {
