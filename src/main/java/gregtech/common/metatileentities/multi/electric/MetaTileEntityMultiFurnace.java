@@ -112,7 +112,7 @@ public class MetaTileEntityMultiFurnace extends RecipeMapMultiblockController {
             boolean dirty = checkRecipeInputsDirty(importInventory, importFluids);
             if (dirty || forceRecipeRecheck) {
                 this.forceRecipeRecheck = false;
-                currentRecipe = findRecipe(maxVoltage, importInventory, importFluids);
+                currentRecipe = findRecipe(maxVoltage, importInventory, importFluids, this.useOptimizedRecipeLookUp);
 //                if (currentRecipe != null) {
 //                    this.previousRecipe.put(currentRecipe);
 //                    this.previousRecipe.cacheUnutilized();
@@ -136,7 +136,7 @@ public class MetaTileEntityMultiFurnace extends RecipeMapMultiblockController {
         @Override
         protected Recipe findRecipe(long maxVoltage,
                                     IItemHandlerModifiable inputs,
-                                    IMultipleTankHandler fluidInputs) {
+                                    IMultipleTankHandler fluidInputs, boolean useOptimizedRecipeLookUp) {
             int currentItemsEngaged = 0;
             final int maxItemsLimit = 32 * heatingCoilLevel;
             final ArrayList<CountableIngredient> recipeInputs = new ArrayList<>();
@@ -155,7 +155,7 @@ public class MetaTileEntityMultiFurnace extends RecipeMapMultiblockController {
                 // Determine if there is a valid recipe for this item. If not, skip it.
                 Recipe matchingRecipe = recipeMap.findRecipe(maxVoltage,
                         Collections.singletonList(currentInputItem),
-                        Collections.emptyList(), 0);
+                        Collections.emptyList(), 0, useOptimizedRecipeLookUp);
                 CountableIngredient inputIngredient;
                 if (matchingRecipe != null)
                     inputIngredient = matchingRecipe.getInputs().get(0);
