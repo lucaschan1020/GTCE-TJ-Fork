@@ -67,6 +67,7 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
 
     private final Map<MapFluidIngredient, Collection<Recipe>> recipeFluidMap = new HashMap<>();
     private final Map<MapItemStackIngredient, Collection<Recipe>> recipeItemMap = new HashMap<>();
+    private final Map<Recipe, Byte> recipeIngredientCountMap = new HashMap<>();
     private final Collection<Recipe> recipeList = new ArrayList<>();
 
     public RecipeMap(String unlocalizedName,
@@ -176,20 +177,27 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
         }
         Recipe recipe = validationResult.getResult();
         recipeList.add(recipe);
-
+        HashSet<MapFluidIngredient> uniqueFluidIngredients = new HashSet<>();
         for (FluidStack fluid : recipe.getFluidInputs()) {
-            recipeFluidMap.computeIfAbsent(new MapFluidIngredient(fluid), k -> new HashSet<>(1)).add(recipe);
+            MapFluidIngredient fluidIngredient = new MapFluidIngredient(fluid);
+            uniqueFluidIngredients.add(fluidIngredient);
+            recipeFluidMap.computeIfAbsent(fluidIngredient, k -> new HashSet<>(1)).add(recipe);
         }
 
+        HashSet<MapItemStackIngredient> uniqueItemIngredients = new HashSet<>();
         for (CountableIngredient item : recipe.getInputs()) {
             Ingredient ingredient = item.getIngredient();
             ItemStack[] itemStacks = ingredient.getMatchingStacks();
-
+            if (itemStacks.length == 0) continue;
+            uniqueItemIngredients.add(new MapItemStackIngredient(itemStacks[0].copy()));
             for (ItemStack itemStack : itemStacks) {
                 ItemStack newItemStack = itemStack.copy();
                 recipeItemMap.computeIfAbsent(new MapItemStackIngredient(newItemStack), k -> new HashSet<>(1)).add(recipe);
             }
         }
+        byte uniqueIngredients = 0;
+        uniqueIngredients += (byte) (uniqueFluidIngredients.size() + uniqueItemIngredients.size());
+        recipeIngredientCountMap.put(recipe, uniqueIngredients);
     }
 
     public boolean removeRecipe(Recipe recipe) {
@@ -329,13 +337,14 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
             uniqueFluids.add(new MapFluidIngredient(fluid));
         }
 
-        HashMap<Recipe, Integer> recipeLeftoverIngredients = new HashMap<>();
+        HashMap<Recipe, Byte> recipeLeftoverIngredients = new HashMap<>();
         for (MapItemStackIngredient item : uniqueItems) {
             boolean hasRecipes = recipeItemMap.containsKey(item);
             if (!hasRecipes) continue;
             Collection<Recipe> recipes = recipeItemMap.get(item);
             for (Recipe recipe : recipes) {
-                Integer leftOverIngredients = recipeLeftoverIngredients.getOrDefault(recipe, recipe.getInputs().size() + recipe.getFluidInputs().size());
+                Byte leftOverIngredients = recipeLeftoverIngredients.getOrDefault(recipe,
+                        recipeIngredientCountMap.getOrDefault(recipe, (byte) 0));
                 leftOverIngredients--;
                 recipeLeftoverIngredients.put(recipe, leftOverIngredients);
                 if (leftOverIngredients > 0) {
@@ -352,7 +361,8 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
             if (!hasRecipes) continue;
             Collection<Recipe> recipes = recipeFluidMap.get(fluid);
             for (Recipe recipe : recipes) {
-                Integer leftOverIngredients = recipeLeftoverIngredients.getOrDefault(recipe, recipe.getInputs().size() + recipe.getFluidInputs().size());
+                Byte leftOverIngredients = recipeLeftoverIngredients.getOrDefault(recipe,
+                        recipeIngredientCountMap.getOrDefault(recipe, (byte) 0));
                 leftOverIngredients--;
                 recipeLeftoverIngredients.put(recipe, leftOverIngredients);
                 if (leftOverIngredients > 0) {
