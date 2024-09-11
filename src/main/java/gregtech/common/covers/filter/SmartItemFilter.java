@@ -54,7 +54,7 @@ public class SmartItemFilter extends ItemFilter {
             ItemStack infinitelyBigStack = itemStack.copy();
             infinitelyBigStack.setCount(Integer.MAX_VALUE);
 
-            Recipe recipe = filteringMode.recipeMap.findRecipe(Long.MAX_VALUE, Collections.singletonList(infinitelyBigStack), Collections.emptyList(), Integer.MAX_VALUE, matchingMode.matchingMode);
+            Recipe recipe = filteringMode.recipeMap.findRecipe(Long.MAX_VALUE, Collections.singletonList(infinitelyBigStack), Collections.emptyList(), Integer.MAX_VALUE, matchingMode.matchingMode, false);
             if (recipe == null) {
                 filteringMode.transferStackSizesCache.put(itemAndMetadata, 0);
                 cachedTransferRateValue = 0;

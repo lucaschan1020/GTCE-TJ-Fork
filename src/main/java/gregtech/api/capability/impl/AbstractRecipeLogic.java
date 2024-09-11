@@ -41,6 +41,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable 
     protected FluidStack[] lastFluidInputs;
     public RecipeLRUCache previousRecipe;
     public int recipeCacheSize;
+    protected boolean useOptimizedRecipeLookUp = true;
     protected boolean allowOverclocking = true;
     private long overclockVoltage = 0;
     private LongSupplier overclockPolicy = this::getMaxVoltage;
@@ -194,7 +195,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable 
             if (dirty || forceRecipeRecheck) {
                 this.forceRecipeRecheck = false;
                 //else, try searching new recipe for given inputs
-                currentRecipe = findRecipe(maxVoltage, importInventory, importFluids);
+                currentRecipe = findRecipe(maxVoltage, importInventory, importFluids, this.useOptimizedRecipeLookUp);
                 if (currentRecipe != null) {
                     this.previousRecipe.put(currentRecipe);
                     this.previousRecipe.cacheUnutilized();
@@ -215,6 +216,19 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable 
         this.forceRecipeRecheck = true;
     }
 
+    public boolean getUseOptimizedRecipeLookUp() {
+        return this.useOptimizedRecipeLookUp;
+    }
+
+    public void setUseOptimizedRecipeLookUp(boolean use) {
+        this.useOptimizedRecipeLookUp = use;
+    }
+
+    public boolean toggleUseOptimizedRecipeLookUp() {
+        setUseOptimizedRecipeLookUp(!this.useOptimizedRecipeLookUp);
+        return this.useOptimizedRecipeLookUp;
+    }
+
     protected int getMinTankCapacity(IMultipleTankHandler tanks) {
         if (tanks.getTanks() == 0) {
             return 0;
@@ -226,8 +240,8 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable 
         return result;
     }
 
-    protected Recipe findRecipe(long maxVoltage, IItemHandlerModifiable inputs, IMultipleTankHandler fluidInputs) {
-        return recipeMap.findRecipe(maxVoltage, inputs, fluidInputs, getMinTankCapacity(getOutputTank()));
+    protected Recipe findRecipe(long maxVoltage, IItemHandlerModifiable inputs, IMultipleTankHandler fluidInputs, boolean useOptimizedRecipeLookUp) {
+        return recipeMap.findRecipe(maxVoltage, inputs, fluidInputs, getMinTankCapacity(getOutputTank()), useOptimizedRecipeLookUp);
     }
 
     protected boolean checkRecipeInputsDirty(IItemHandler inputs, IMultipleTankHandler fluidInputs) {

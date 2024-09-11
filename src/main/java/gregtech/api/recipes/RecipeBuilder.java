@@ -2,8 +2,8 @@ package gregtech.api.recipes;
 
 import gregtech.api.items.metaitem.MetaItem;
 import gregtech.api.recipes.Recipe.ChanceEntry;
-import gregtech.api.unification.material.type.FluidMaterial;
 import gregtech.api.unification.OreDictUnifier;
+import gregtech.api.unification.material.type.FluidMaterial;
 import gregtech.api.unification.material.type.Material;
 import gregtech.api.unification.ore.OrePrefix;
 import gregtech.api.util.EnumValidationResult;
@@ -345,16 +345,16 @@ public abstract class RecipeBuilder<R extends RecipeBuilder<R>> {
     @Override
     public String toString() {
         return new ToStringBuilder(this)
-            .append("recipeMap", recipeMap)
-            .append("inputs", inputs)
-            .append("outputs", outputs)
-            .append("chancedOutputs", chancedOutputs)
-            .append("fluidInputs", fluidInputs)
-            .append("fluidOutputs", fluidOutputs)
-            .append("duration", duration)
-            .append("EUt", EUt)
-            .append("hidden", hidden)
-            .append("recipeStatus", recipeStatus)
-            .toString();
+                .append("recipeMap", recipeMap)
+                .append("inputs", inputs)
+                .append("outputs", outputs)
+                .append("chancedOutputs", chancedOutputs)
+                .append("fluidInputs", fluidInputs)
+                .append("fluidOutputs", fluidOutputs)
+                .append("duration", duration)
+                .append("EUt", EUt)
+                .append("hidden", hidden)
+                .append("recipeStatus", recipeStatus)
+                .toString();
     }
 }

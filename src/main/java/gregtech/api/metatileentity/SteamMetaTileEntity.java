@@ -134,13 +134,13 @@ public abstract class SteamMetaTileEntity extends MetaTileEntity {
             playerIn.sendMessage(new TextComponentString("The recipe cache has been cleared."));
             return true;
         }
-        boolean isAscending = this.workableHandler.previousRecipe.toggleIsReadAscending();
+        boolean useOptimizedRecipeLookUp = this.workableHandler.toggleUseOptimizedRecipeLookUp();
         markDirty();
-        if (isAscending) {
-            playerIn.sendMessage(new TextComponentString("Search recipe from the cache sequentially (starting from the most recently used, better performance)"));
+        if (useOptimizedRecipeLookUp) {
+            playerIn.sendMessage(new TextComponentString("Using optimized recipe lookup, might fail to detects some of the recipes"));
         }
         else {
-            playerIn.sendMessage(new TextComponentString("Search recipe from the cache using a round-robin method (starting from the least recently used cache, may cause slightly lower performance)"));
+            playerIn.sendMessage(new TextComponentString("Using unoptimized recipe lookup, can detects all of the recipes but with poor performance"));
         }
         return true;
     }
@@ -148,15 +148,15 @@ public abstract class SteamMetaTileEntity extends MetaTileEntity {
     @Override
     public NBTTagCompound writeToNBT(NBTTagCompound data) {
         NBTTagCompound tagCompound = super.writeToNBT(data);
-        tagCompound.setBoolean("RecipeCacheIsReadAscending", this.workableHandler.previousRecipe.getIsReadAscending());
+        tagCompound.setBoolean("UseOptimizedRecipeLookUp", this.workableHandler.getUseOptimizedRecipeLookUp());
         return tagCompound;
     }
 
     @Override
     public void readFromNBT(NBTTagCompound data) {
         super.readFromNBT(data);
-        if (data.hasKey("RecipeCacheIsReadAscending")) {
-            this.workableHandler.previousRecipe.setIsReadAscending(data.getBoolean("RecipeCacheIsReadAscending"));
+        if (data.hasKey("UseOptimizedRecipeLookUp")) {
+            this.workableHandler.setUseOptimizedRecipeLookUp(data.getBoolean("UseOptimizedRecipeLookUp"));
         }
     }
 }
