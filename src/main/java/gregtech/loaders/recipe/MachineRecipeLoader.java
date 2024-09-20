@@ -1161,7 +1161,8 @@ public class MachineRecipeLoader {
         ModHandler.addShapelessRecipe("super_tank_nbt_" + MetaTileEntities.Super_tank[2].getMetaName(), MetaTileEntities.Super_tank[2].getStackForm(), MetaTileEntities.Super_tank[2].getStackForm());
         ModHandler.addShapelessRecipe("super_tank_nbt_" + MetaTileEntities.Super_tank[3].getMetaName(), MetaTileEntities.Super_tank[3].getStackForm(), MetaTileEntities.Super_tank[3].getStackForm());
         ModHandler.addShapelessRecipe("super_tank_nbt_" + MetaTileEntities.Super_tank[4].getMetaName(), MetaTileEntities.Super_tank[4].getStackForm(), MetaTileEntities.Super_tank[4].getStackForm());
-
+        ModHandler.addShapelessRecipe("creative_chest_nbt" , MetaTileEntities.CREATIVE_CHEST.getStackForm(), MetaTileEntities.CREATIVE_CHEST.getStackForm());
+        ModHandler.addShapelessRecipe("creative_tank_nbt" , MetaTileEntities.CREATIVE_TANK.getStackForm(), MetaTileEntities.CREATIVE_TANK.getStackForm());
     }
 
 }

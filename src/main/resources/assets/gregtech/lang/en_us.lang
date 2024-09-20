@@ -2318,6 +2318,7 @@ gregtech.machine.quantum_chest.iv.name=Quantum Chest I
 gregtech.machine.quantum_chestluv.name=Quantum Chest II
 gregtech.machine.quantum_chestzpm.name=Quantum Chest III
 gregtech.machine.quantum_chestuv.name=Quantum Chest IV
+gregtech.machine.creative_chest.name=Creative Chest
 
 
 #Quantum tanks
@@ -2335,6 +2336,7 @@ gregtech.machine.quantum_tank.iv.name=Quantum Tank I
 gregtech.machine.quantum_tankluv.name=Quantum Tank II
 gregtech.machine.quantum_tankzpm.name=Quantum Tank III
 gregtech.machine.quantum_tankuv.name=Quantum Tank IV
+gregtech.machine.creative_tank.name=Creative Tank
 
 #Air Collectors
 gregtech.machine.air_collector.lv.name=Basic Air Collector
@@ -2978,8 +2980,10 @@ gregtech.gui.item_auto_output.tooltip.enabled=Item Auto-Output Enabled
 gregtech.gui.item_auto_output.tooltip.disabled=Item Auto-Output Disabled
 gregtech.gui.fluid_voiding.tooltip.enabled=Excess Fluid Voiding Enabled
 gregtech.gui.fluid_voiding.tooltip.disabled=Excess Fluid Voiding Disabled
+gregtech.gui.clear_fluid.tooltip.disabled=Clear Fluid
 gregtech.gui.item_voiding.tooltip.enabled=Excess Item Voiding Enabled
 gregtech.gui.item_voiding.tooltip.disabled=Excess Item Voiding Disabled
+gregtech.gui.clear_item.tooltip.disabled=Clear Item
 
 gregtech.jei.ore_by_product_from_ore=Use %s for %s
 gregtech.jei.ore_by_product_from_machine=Produce by processing %s with %s

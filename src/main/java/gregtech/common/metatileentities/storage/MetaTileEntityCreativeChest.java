@@ -1,0 +1,376 @@
+package gregtech.common.metatileentities.storage;
+
+import codechicken.lib.render.CCRenderState;
+import codechicken.lib.render.pipeline.ColourMultiplier;
+import codechicken.lib.render.pipeline.IVertexOperation;
+import codechicken.lib.vec.Matrix4;
+import codechicken.lib.vec.Vector3;
+import gregtech.api.gui.GuiTextures;
+import gregtech.api.gui.ModularUI;
+import gregtech.api.gui.ModularUI.Builder;
+import gregtech.api.gui.widgets.AdvancedTextWidget;
+import gregtech.api.gui.widgets.SlotWidget;
+import gregtech.api.gui.widgets.ToggleButtonWidget;
+import gregtech.api.metatileentity.ITieredMetaTileEntity;
+import gregtech.api.metatileentity.MetaTileEntity;
+import gregtech.api.metatileentity.MetaTileEntityHolder;
+import gregtech.api.render.Textures;
+import gregtech.api.util.GTUtility;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.resources.I18n;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.TextComponentTranslation;
+import net.minecraft.world.World;
+import net.minecraftforge.common.util.Constants.NBT;
+import net.minecraftforge.items.IItemHandler;
+import net.minecraftforge.items.IItemHandlerModifiable;
+import net.minecraftforge.items.ItemStackHandler;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.tuple.Pair;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.List;
+
+public class MetaTileEntityCreativeChest extends MetaTileEntity implements ITieredMetaTileEntity {
+
+    private static final double[] rotations = new double[]{180.0, 0.0, -90.0, 90.0};
+
+    private ItemStack itemStack = ItemStack.EMPTY;
+    private long itemsStoredInside = 0L;
+
+    private static final String NBT_ITEMSTACK = "ItemStack";
+    private static final String NBT_PARTIALSTACK = "PartialStack";
+    private static final String NBT_ITEMCOUNT = "ItemAmount";
+
+    public MetaTileEntityCreativeChest(ResourceLocation metaTileEntityId) {
+        super(metaTileEntityId);
+    }
+
+    @Override
+    public int getTier() {
+        return 1;
+    }
+
+    @Override
+    public MetaTileEntity createMetaTileEntity(MetaTileEntityHolder holder) {
+        return new MetaTileEntityCreativeChest(metaTileEntityId);
+    }
+
+    @Override
+    public void renderMetaTileEntity(CCRenderState renderState, Matrix4 translation, IVertexOperation[] pipeline) {
+        Textures.VOLTAGE_CASINGS[1].render(renderState, translation, ArrayUtils.add(pipeline,
+                new ColourMultiplier(GTUtility.convertRGBtoOpaqueRGBA_CL(getPaintingColorForRendering()))));
+        translation.translate(0.5, 0.001, 0.5);
+        translation.rotate(Math.toRadians(rotations[getFrontFacing().getIndex() - 2]), new Vector3(0.0, 1.0, 0.0));
+        translation.translate(-0.5, 0.0, -0.5);
+        Textures.SCREEN.renderSided(EnumFacing.UP, renderState, translation, pipeline);
+    }
+
+    @Override
+    public Pair<TextureAtlasSprite, Integer> getParticleTexture() {
+        return Pair.of(Textures.VOLTAGE_CASINGS[1].getParticleSprite(), getPaintingColor());
+    }
+
+    @Override
+    public int getActualComparatorValue() {
+        float f = itemsStoredInside / (Integer.MAX_VALUE * 1.0f);
+        return MathHelper.floor(f * 14.0f) + (itemsStoredInside > 0 ? 1 : 0);
+    }
+
+    @Override
+    public void update() {
+        super.update();
+        if (!getWorld().isRemote) {
+//            if (itemsStoredInside < maxStoredItems) {
+            ItemStack inputStack = importItems.getStackInSlot(0);
+            ItemStack outputStack = exportItems.getStackInSlot(0);
+            if (outputStack.isEmpty() || outputStack.isItemEqual(inputStack) && ItemStack.areItemStackTagsEqual(inputStack, outputStack)) {
+                if (!inputStack.isEmpty() && (itemStack.isEmpty() || areItemStackIdentical(itemStack, inputStack))) {
+//                        int amountOfItemsToInsert = (int) Math.min(inputStack.getCount(), maxStoredItems - itemsStoredInside);
+                    if (this.itemsStoredInside == 0L || itemStack.isEmpty()) {
+                        this.itemStack = GTUtility.copyAmount(1, inputStack);
+                    }
+                    inputStack.shrink(inputStack.getCount());
+                    importItems.setStackInSlot(0, inputStack);
+                    this.itemsStoredInside = Integer.MAX_VALUE;
+                    markDirty();
+                }
+            }
+//            }
+            if (itemsStoredInside > 0 && !itemStack.isEmpty()) {
+                int maxStackSize = itemStack.getMaxStackSize();
+                if (outputStack.isEmpty() || (areItemStackIdentical(itemStack, outputStack) && outputStack.getCount() < maxStackSize)) {
+                    int amountOfItemsToRemove = (int) Math.min(maxStackSize - outputStack.getCount(), itemsStoredInside);
+                    if (outputStack.isEmpty()) {
+                        outputStack = GTUtility.copyAmount(amountOfItemsToRemove, itemStack);
+                    } else outputStack.grow(amountOfItemsToRemove);
+                    exportItems.setStackInSlot(0, outputStack);
+//                    this.itemsStoredInside -= amountOfItemsToRemove;
+//                    if (this.itemsStoredInside == 0) {
+//                        this.itemStack = ItemStack.EMPTY;
+//                    }
+                    markDirty();
+                }
+            }
+
+            if (inputStack.isEmpty()) return;
+            boolean similarItemStack = areItemStackIdentical(itemStack, inputStack);
+            if (similarItemStack) {
+                importItems.setStackInSlot(0, ItemStack.EMPTY);
+            }
+        }
+    }
+
+    private static boolean areItemStackIdentical(ItemStack first, ItemStack second) {
+        return ItemStack.areItemsEqual(first, second) &&
+                ItemStack.areItemStackTagsEqual(first, second);
+    }
+
+    protected void addDisplayInformation(List<ITextComponent> textList) {
+        textList.add(new TextComponentTranslation("gregtech.machine.quantum_chest.items_stored"));
+        textList.add(new TextComponentString(String.format("%,d", itemsStoredInside)));
+    }
+
+    @Override
+    public void addInformation(ItemStack stack, @Nullable World player, List<String> tooltip, boolean advanced) {
+        super.addInformation(stack, player, tooltip, advanced);
+        tooltip.add(I18n.format("gregtech.machine.quantum_chest.capacity", Integer.MAX_VALUE));
+
+        NBTTagCompound compound = stack.getTagCompound();
+        if (compound != null) {
+            String translationKey = null;
+            long count = 0;
+            if (compound.hasKey(NBT_ITEMSTACK)) {
+                translationKey = new ItemStack(compound.getCompoundTag(NBT_ITEMSTACK)).getDisplayName();
+                count = compound.getLong(NBT_ITEMCOUNT);
+            } else if (compound.hasKey(NBT_PARTIALSTACK)) {
+                ItemStack tempStack = new ItemStack(compound.getCompoundTag(NBT_PARTIALSTACK));
+                translationKey = tempStack.getDisplayName();
+                count = tempStack.getCount();
+            }
+            if (translationKey != null) {
+                tooltip.add(I18n.format("gregtech.machine.quantum_chest.tooltip.item",
+                        I18n.format(translationKey)));
+                tooltip.add(I18n.format("gregtech.machine.quantum_chest.tooltip.count", count));
+            }
+        }
+    }
+
+    @Override
+    protected void initializeInventory() {
+        super.initializeInventory();
+        this.itemInventory = new CreativeChestItemHandler();
+    }
+
+    @Override
+    protected IItemHandlerModifiable createImportItemHandler() {
+        return new ItemStackHandler(1);
+    }
+
+    @Override
+    protected IItemHandlerModifiable createExportItemHandler() {
+        return new ItemStackHandler(1);
+    }
+
+    @Override
+    public boolean hasFrontFacing() {
+        return false;
+    }
+
+    @Override
+    public NBTTagCompound writeToNBT(NBTTagCompound data) {
+        NBTTagCompound tagCompound = super.writeToNBT(data);
+        if (!itemStack.isEmpty() && itemsStoredInside > 0L) {
+            tagCompound.setTag(NBT_ITEMSTACK, itemStack.writeToNBT(new NBTTagCompound()));
+            tagCompound.setLong(NBT_ITEMCOUNT, itemsStoredInside);
+        }
+        return tagCompound;
+    }
+
+    @Override
+    public void readFromNBT(NBTTagCompound data) {
+        super.readFromNBT(data);
+        if (data.hasKey(NBT_ITEMSTACK, NBT.TAG_COMPOUND)) {
+            this.itemStack = new ItemStack(data.getCompoundTag(NBT_ITEMSTACK));
+            if (!itemStack.isEmpty()) {
+                this.itemsStoredInside = data.getLong(NBT_ITEMCOUNT);
+            }
+        }
+    }
+
+    @Override
+    public void initFromItemStackData(NBTTagCompound itemStack) {
+        super.initFromItemStackData(itemStack);
+        if (itemStack.hasKey(NBT_ITEMSTACK, NBT.TAG_COMPOUND)) {
+            this.itemStack = new ItemStack(itemStack.getCompoundTag(NBT_ITEMSTACK));
+            if (!this.itemStack.isEmpty()) {
+                this.itemsStoredInside = itemStack.getLong(NBT_ITEMCOUNT);
+            }
+        } else if (itemStack.hasKey(NBT_PARTIALSTACK, NBT.TAG_COMPOUND)) {
+            exportItems.setStackInSlot(0, new ItemStack(itemStack.getCompoundTag(NBT_PARTIALSTACK)));
+        }
+    }
+
+    @Override
+    public void writeItemStackData(NBTTagCompound itemStack) {
+        super.writeItemStackData(itemStack);
+        if (!this.itemStack.isEmpty()) {
+            itemStack.setTag(NBT_ITEMSTACK, this.itemStack.writeToNBT(new NBTTagCompound()));
+            itemStack.setLong(NBT_ITEMCOUNT, itemsStoredInside + this.exportItems.getStackInSlot(0).getCount());
+        } else {
+            ItemStack partialStack = exportItems.extractItem(0, 64, false);
+            if (!partialStack.isEmpty()) {
+                itemStack.setTag(NBT_PARTIALSTACK, partialStack.writeToNBT(new NBTTagCompound()));
+            }
+        }
+        this.itemStack = ItemStack.EMPTY;
+        this.itemsStoredInside = 0;
+        exportItems.setStackInSlot(0, ItemStack.EMPTY);
+    }
+
+    @Override
+    protected ModularUI createUI(EntityPlayer entityPlayer) {
+        Builder builder = ModularUI.defaultBuilder();
+        builder.image(7, 16, 81, 55, GuiTextures.DISPLAY);
+        builder.widget(new AdvancedTextWidget(11, 20, this::addDisplayInformation, 0xFFFFFF));
+        return builder.label(6, 6, getMetaFullName())
+                .widget(new SlotWidget(importItems, 0, 90, 17, true, true)
+                        .setBackgroundTexture(GuiTextures.SLOT, GuiTextures.IN_SLOT_OVERLAY))
+                .widget(new SlotWidget(exportItems, 0, 90, 54, true, false)
+                        .setBackgroundTexture(GuiTextures.SLOT, GuiTextures.OUT_SLOT_OVERLAY))
+                .widget(new ToggleButtonWidget(151, 64, 18, 18,
+                        GuiTextures.BUTTON_ITEM_VOID, this::isItemCleared, this::clearItem)
+                        .setTooltipText("gregtech.gui.clear_item.tooltip")
+                        .shouldUseBaseBackground())
+                .bindPlayerInventory(entityPlayer.inventory)
+                .build(getHolder(), entityPlayer);
+    }
+
+    protected boolean isItemCleared() {
+        return false;
+    }
+
+    protected void clearItem(boolean shouldClear) {
+        this.itemStack = ItemStack.EMPTY;
+        this.itemsStoredInside = 0L;
+        if (!getWorld().isRemote) {
+            markDirty();
+        }
+    }
+
+    private class CreativeChestItemHandler implements IItemHandler {
+
+        @Override
+        public int getSlots() {
+            return 1;
+        }
+
+        @Nonnull
+        @Override
+        public ItemStack getStackInSlot(int slot) {
+            ItemStack itemStack = MetaTileEntityCreativeChest.this.itemStack;
+            long itemsStored = MetaTileEntityCreativeChest.this.itemsStoredInside;
+            if (itemStack.isEmpty() || itemsStored == 0L) {
+                return ItemStack.EMPTY;
+            }
+            ItemStack resultStack = itemStack.copy();
+            resultStack.setCount((int) itemsStored);
+            return resultStack;
+        }
+
+        @Override
+        public int getSlotLimit(int slot) {
+            return Integer.MAX_VALUE;
+        }
+
+        @Nonnull
+        @Override
+        public ItemStack extractItem(int slot, int amount, boolean simulate) {
+            if (itemStack.isEmpty() || amount == 0) {
+                return ItemStack.EMPTY;
+            }
+            ItemStack extractedStack = itemStack.copy();
+            extractedStack.setCount(amount);
+//            if (!simulate) {
+//                MetaTileEntityCreativeChest.this.itemsStoredInside -= extractedAmount;
+//                if (itemsStoredInside == 0L) {
+//                    MetaTileEntityCreativeChest.this.itemStack = ItemStack.EMPTY;
+//                }
+//            }
+            return extractedStack;
+        }
+
+        @Nonnull
+        @Override
+        public ItemStack insertItem(int slot, @Nonnull ItemStack stack, boolean simulate) {
+
+            if (stack.isEmpty()) {
+                return ItemStack.EMPTY;
+            }
+
+            if (itemsStoredInside > 0L &&
+                    !itemStack.isEmpty() &&
+                    !areItemStackIdentical(itemStack, stack)) {
+                return stack;
+            }
+
+            // The Quantum Chest automatically populates the export slot, so we need to check what is contained in it
+            ItemStack exportItems = getExportItems().getStackInSlot(0);
+
+            // Check if the item being inserted matches the item in the export slot
+            boolean insertMatching = areItemStackIdentical(stack, exportItems);
+
+            // If the item being inserted does not match the item in the export slot, insert into the input slot and do not virtualize
+            if (!insertMatching) {
+                return MetaTileEntityCreativeChest.this.importItems.insertItem(0, stack, simulate);
+            }
+
+//            int insertedAmount;
+//            int amountInsertedIntoExport;
+//
+//            // Attempt to insert into the export slot first
+//            amountInsertedIntoExport = Math.abs(exportItems.getCount() - exportItems.getMaxStackSize());
+//
+//            // If we had more Items than would fit into the export slot, virtualize the remainder
+//            if (amountInsertedIntoExport < stack.getCount()) {
+//                long amountLeftInChest = itemStack.isEmpty() ? maxStoredItems : maxStoredItems - itemsStoredInside;
+//                insertedAmount = (int) Math.min(stack.getCount() - amountInsertedIntoExport, amountLeftInChest);
+//
+//            }
+//            // Return early, as we did not virtualize anything, as it all fit into the output slot
+//            else {
+//                return MetaTileEntityCreativeChest.this.exportItems.insertItem(0, stack, simulate);
+//            }
+
+            ItemStack remainingStack = ItemStack.EMPTY;
+
+            // If we are at the maximum that the chest can hold
+//            if (stack.getCount() - amountInsertedIntoExport > insertedAmount) {
+//                remainingStack = stack.copy();
+//                remainingStack.setCount(stack.getCount() - insertedAmount);
+//                remainingStack.setCount(stack.getCount() - insertedAmount);
+//            }
+            if (!simulate) {
+                if (itemStack.isEmpty()) {
+                    MetaTileEntityCreativeChest.this.itemStack = stack.copy();
+                }
+                MetaTileEntityCreativeChest.this.itemsStoredInside = Integer.MAX_VALUE;
+            }
+//            if (isVoiding() && remainingStack.getCount() > 0) {
+//                return ItemStack.EMPTY;
+//            } else {
+//                return remainingStack;
+//            }
+            return remainingStack;
+        }
+    }
+
+}

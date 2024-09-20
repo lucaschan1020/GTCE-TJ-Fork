@@ -165,6 +165,8 @@ public class MetaTileEntities {
     public static MetaTileEntityQuantumChest[] super_chest = new MetaTileEntityQuantumChest[4];
     public static MetaTileEntityQuantumTank[] QUANTUM_TANK = new MetaTileEntityQuantumTank[4];
     public static MetaTileEntityQuantumTank[] Super_tank = new MetaTileEntityQuantumTank[5];
+    public static MetaTileEntityCreativeChest CREATIVE_CHEST;
+    public static MetaTileEntityCreativeTank CREATIVE_TANK;
     public static MetaTileEntityFisher[] FISHER = new MetaTileEntityFisher[4];
 
     public static void init() {
@@ -549,6 +551,11 @@ public class MetaTileEntities {
             BLOCK_BREAKER[i - 1] = new MetaTileEntityBlockBreaker(gregtechId("block_breaker." + voltageName), i);
             GregTechAPI.registerMetaTileEntity(1030 + (i - 1), BLOCK_BREAKER[i - 1]);
         }
+
+        CREATIVE_CHEST = new MetaTileEntityCreativeChest(gregtechId("creative_chest"));
+        CREATIVE_TANK = new MetaTileEntityCreativeTank(gregtechId("creative_tank"));
+        GregTechAPI.registerMetaTileEntity(1040, CREATIVE_CHEST);
+        GregTechAPI.registerMetaTileEntity(1041, CREATIVE_TANK);
     }
 
     private static ResourceLocation gregtechId(String name) {
